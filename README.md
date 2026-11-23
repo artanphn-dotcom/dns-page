@@ -1,144 +1,329 @@
-# DNS Tool
+# 🌐 DNS Tool — Advanced DNS Diagnostics Dashboard
 
-DNS Tool is a lightweight DNS diagnostics dashboard built with Node.js. It helps users quickly inspect a domain's DNS health, public network context, and record configuration from a single browser interface.
+<p align="center">
+  <strong>Complete DNS, Domain Health, Network & SSL/TLS Intelligence in One Dashboard</strong>
+  <br />
+  A lightweight, responsive and security-focused domain diagnostics platform powered by Node.js.
+</p>
 
-The project combines a small HTTP server with a responsive frontend. The backend resolves DNS records, performs safety checks, and exposes a few JSON API endpoints. The frontend consumes those endpoints and renders summary, detail, geo, and full-report views.
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/Architecture-Lightweight-blue?style=for-the-badge" alt="Lightweight Architecture" />
+  <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge" alt="Active Development" />
+</p>
 
-## Why this project exists
+<p align="center">
+  <img src="https://img.shields.io/badge/DNS-Analysis-2563EB?style=flat-square" alt="DNS Analysis" />
+  <img src="https://img.shields.io/badge/DNSSEC-Detection-7C3AED?style=flat-square" alt="DNSSEC" />
+  <img src="https://img.shields.io/badge/SPF%20%7C%20DKIM%20%7C%20DMARC-Email%20Security-0891B2?style=flat-square" alt="Email Security" />
+  <img src="https://img.shields.io/badge/SSL%2FTLS-Diagnostics-16A34A?style=flat-square" alt="SSL TLS" />
+</p>
 
-This tool is designed for quick domain troubleshooting and visibility. It answers questions like:
+---
 
-- Does the domain resolve correctly?
-- What record types are published?
-- Is the website reachable over HTTP/HTTPS?
-- What IP and geo context is associated with the domain?
-- Is the domain's health likely good, warning, or critical?
+## 📖 Overview
 
-It is intentionally simple and lightweight, making it useful for local diagnostics, demos, and early-stage DNS analysis without needing a large monitoring platform.
+**DNS Tool** is a lightweight DNS diagnostics and domain intelligence dashboard built with **Node.js**.
 
-## Features
+It provides a centralized interface for inspecting DNS records, evaluating domain health, analyzing advanced DNS configurations, checking SSL/TLS certificates, and exploring public network information.
 
-### Core DNS checks
+The application combines a lightweight HTTP backend with a responsive frontend to deliver detailed diagnostic information through a clean, browser-based interface.
 
-- A, AAAA, NS, MX, TXT, and PTR lookups
-- Reverse DNS (PTR) checks
-- DMARC record inspection
-- Mail-exchange record review
-- Domain health evaluation based on key indicators
+From basic DNS lookups to advanced DNS security analysis, DNS Tool brings essential domain troubleshooting capabilities together in one convenient platform.
 
-### Health and reachability
+### 🎯 Why This Project Exists
 
-- HTTP/HTTPS reachability checks
+Domain troubleshooting often requires switching between multiple command-line utilities and online diagnostic services.
+
+DNS Tool simplifies this workflow by bringing important diagnostic capabilities into a single dashboard.
+
+It helps answer questions such as:
+
+- 🔎 Does the domain resolve correctly?
+- 🌐 Which DNS records are published?
+- ⏱️ What are the DNS TTL values and propagation results?
+- 🛡️ Is DNSSEC detected?
+- 📧 Are SPF, DKIM, and DMARC configured?
+- 🔐 Is the website reachable over HTTPS?
+- 🌍 Which public IP and geolocation information are associated with the domain?
+- ❤️ Is the domain's overall health Healthy, Warning, or Critical?
+
+The application is intentionally lightweight, making it suitable for developers, system administrators, network enthusiasts, and anyone who needs quick domain visibility without deploying a large monitoring platform.
+
+---
+
+## ✨ Features
+
+### 🔎 1. Core DNS Diagnostics
+
+Inspect essential DNS records and domain configuration.
+
+- A record lookups
+- AAAA record lookups
+- NS (Name Server) inspection
+- MX (Mail Exchange) analysis
+- TXT record inspection
+- PTR (Reverse DNS) lookups
+- DMARC record detection
+- Domain DNS configuration overview
+- DNS record availability checks
+
+### 🚀 2. Advanced DNS Intelligence
+
+Go beyond basic DNS lookups with additional domain intelligence.
+
+- 🌍 DNS propagation snapshot and TTL review
+- 🔐 DNSSEC detection summary
+- 📧 SPF record analysis
+- 🔑 DKIM record checks
+- 🛡️ DMARC evaluation
+- 📊 Advanced DNS configuration reporting
+- ⏱️ DNS TTL information
+- 📋 Consolidated advanced DNS findings
+
+### ❤️ 3. Domain Health & Reachability
+
+Evaluate the availability and general health of a domain.
+
+- HTTP and HTTPS reachability checks
+- DNS record presence validation
+- Reverse DNS status checks
+- Website availability verification
+- Domain health scoring
 - Browser-friendly health summaries
-- Overall grade: Healthy, Warning, or Critical
-- Quick checks for route and endpoint availability
 
-### Network and geo context
+**Health classifications:**
 
-- Public IPv4 and IPv6 detection
-- Local interface detection
-- Geo metadata for the current public IP
-- Geo metadata for the active domain's IP when available
-- Summary cards for network visibility
+| Status | Description |
+|---|---|
+| 🟢 Healthy | Key diagnostic indicators are satisfactory |
+| 🟡 Warning | Some configuration or availability concerns exist |
+| 🔴 Critical | Important diagnostic checks have failed |
 
-### Dashboard experience
+### 🔐 4. SSL/TLS Diagnostics
 
-- Domain input and record-type selector
-- DNS toolkit tabs for overview, lookup, reverse DNS, MX, NS, DMARC, health, and full report
-- Detailed diagnostic panel
-- Responsive layout for desktop and smaller screens
-- Full-report table that consolidates the main findings
+Inspect HTTPS connectivity and certificate information.
 
-## Architecture
+- HTTPS response status
+- TLS protocol detection
+- Cipher information
+- SSL certificate issuer
+- Certificate expiration dates
+- Hostname validation
+- Certificate subject details
+- TLS connection diagnostics
 
-The project has a very small, direct architecture:
+### 🌍 5. Network & Geolocation Intelligence
 
-- Server: `server.js`
-- Frontend: `public/index.html`, `public/app.js`, `public/styles.css`
-- Runtime: Node.js
-- Core modules: `http`, `https`, `dns`, `fs`, `path`, `os`, `tls`
+Explore public network information associated with the system and domain.
 
-The backend serves static files and JSON API endpoints. The frontend performs fetch calls to those endpoints and re-renders specific sections of the dashboard based on the selected tool.
+- Public IPv4 detection
+- Public IPv6 detection
+- Local network interface detection
+- Public IP geolocation
+- Domain IP geolocation when available
+- Network information summaries
+- IP and geographic context
 
-## Project structure
+### 📊 6. Interactive Dashboard
+
+A responsive interface designed to make diagnostics easier to navigate.
+
+- Domain search and input validation
+- DNS record type selector
+- Dedicated DNS toolkit tabs
+- Overview and summary cards
+- Advanced DNS analysis panels
+- SSL/TLS diagnostic panels
+- Health status indicators
+- Network and geolocation cards
+- Detailed diagnostic information
+- Consolidated full-report table
+- Responsive desktop and mobile layout
+
+---
+
+## 🖥️ Dashboard Modules
+
+| Module | Functionality |
+|---|---|
+| 📊 Overview | Domain and network summary |
+| 🔎 DNS Lookup | A, AAAA, NS, MX, TXT and PTR records |
+| 🔄 Reverse DNS | PTR record inspection |
+| 📧 MX Lookup | Mail exchange analysis |
+| 🌐 NS Lookup | Name server inspection |
+| 🛡️ DMARC | DMARC record detection and evaluation |
+| 🚀 Advanced DNS | Propagation, TTL, DNSSEC, SPF and DKIM |
+| ❤️ Health | Domain health and reachability |
+| 🔐 SSL/TLS | Certificate and connection diagnostics |
+| 📋 Full Report | Consolidated diagnostic findings |
+
+---
+
+## 🏗️ Architecture
+
+DNS Tool follows a simple, lightweight architecture that separates backend processing from frontend presentation.
+
+### Backend
+
+Built with Node.js and native modules.
+
+- HTTP server
+- DNS resolution
+- Advanced DNS inspection
+- HTTP/HTTPS health checks
+- TLS certificate inspection
+- Network information collection
+- API request validation
+- Request rate limiting
+- JSON API responses
+
+### Frontend
+
+Built with standard web technologies.
+
+- HTML5
+- CSS3
+- Vanilla JavaScript
+- Fetch API
+- Responsive dashboard components
+- Dynamic diagnostic rendering
+
+### Core Node.js Modules
+
+| Module | Purpose |
+|---|---|
+| `http` | HTTP server and requests |
+| `https` | Secure HTTP connections |
+| `dns` | DNS resolution |
+| `tls` | TLS diagnostics |
+| `fs` | File system operations |
+| `path` | File path handling |
+| `os` | Network interface information |
+
+---
+
+## 📂 Project Structure
 
 ```text
-DNS Tool/
+DNS-Tool/
+│
 ├── public/
 │   ├── app.js
 │   ├── index.html
 │   └── styles.css
+│
 ├── package.json
 ├── server.js
 ├── README.md
 └── .gitignore
 ```
 
-## Key files
+### 📄 Key Files
 
-### `server.js`
+| File | Description |
+|---|---|
+| `server.js` | HTTP server, DNS resolution, diagnostics, security and API endpoints |
+| `public/index.html` | Dashboard layout and HTML structure |
+| `public/app.js` | Frontend interactions, API communication and dynamic rendering |
+| `public/styles.css` | Dashboard styling, cards, panels and responsive layout |
+| `package.json` | Project metadata and npm scripts |
+| `.gitignore` | Files and directories excluded from Git |
+
+### 🔧 Backend — `server.js`
 
 Responsible for:
 
-- starting the HTTP server
-- serving static files from `public/`
-- validating domain input
-- resolving DNS records
-- running HTTP health checks
-- collecting public IP and geo metadata
-- providing JSON endpoints for the frontend
-- enforcing basic request limits and safer handling of malformed input
+- Starting the HTTP server
+- Serving static frontend files
+- Validating and normalizing domain input
+- Resolving DNS records
+- Performing advanced DNS analysis
+- Checking DNSSEC, SPF, DKIM and DMARC
+- Reviewing DNS propagation snapshots and TTL data
+- Performing HTTP/HTTPS health checks
+- Collecting public IP and geolocation metadata
+- Inspecting SSL/TLS certificates
+- Exposing JSON API endpoints
+- Enforcing request limits and safer input handling
 
-### `public/index.html`
+### 🎨 Frontend — `public/index.html`
 
-Contains the dashboard shell and all major sections, including:
+Contains:
 
-- top navigation and header
-- domain search block
-- DNS toolkit tabs
-- summary cards
-- diagnostic detail area
-- geo panels
-- full report sections
+- Dashboard header and navigation
+- Domain search interface
+- DNS toolkit navigation
+- Summary cards
+- Diagnostic detail panels
+- Advanced DNS sections
+- SSL/TLS panels
+- Network and geolocation information
+- Full-report sections
 
-### `public/app.js`
+### ⚡ Frontend Logic — `public/app.js`
 
 Handles:
 
-- form interaction and search behavior
+- Domain search and form interactions
 - API requests
-- state updates
-- rendering health badges
-- rendering lookup results and details
-- generating the full report view
+- Frontend state management
+- Health status rendering
+- DNS lookup results
+- Advanced DNS information
+- Diagnostic details
+- Full-report generation
 
-### `public/styles.css`
+### 🎨 Styling — `public/styles.css`
 
-Defines the styling for:
+Defines:
 
-- cards and panels
-- dashboard layout
-- report grid formatting
-- status pills and empty states
-- mobile responsiveness
+- Dashboard layout
+- Cards and diagnostic panels
+- Report grid formatting
+- Status badges and indicators
+- Responsive design
+- Empty states and interface styling
 
-## Requirements
+---
 
-- Node.js 18+ recommended
-- Internet access for public IP/geo lookups
-- A local browser to access the dashboard
+## ⚙️ Requirements
 
-## Installation
+Before running DNS Tool, make sure you have:
 
-From the project root:
+- **Node.js 18 or newer**
+- npm package manager
+- Internet connectivity for public IP and geolocation lookups
+- A modern web browser
+
+---
+
+## 🚀 Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/YOUR-USERNAME/DNS-Tool.git
+```
+
+### 2. Navigate to the Project
+
+```bash
+cd DNS-Tool
+```
+
+### 3. Install Dependencies
 
 ```bash
 npm install
 ```
 
-The project uses built-in Node.js modules, so installation is generally lightweight. If there are no external dependencies, the command should complete quickly and simply confirm the environment is ready.
+The application primarily uses built-in Node.js modules, keeping the installation lightweight.
 
-## Running the app
+---
+
+## ▶️ Running the Application
 
 Start the server:
 
@@ -146,177 +331,260 @@ Start the server:
 npm start
 ```
 
-Then open:
+Open your browser and navigate to:
 
-```text
-http://localhost:3001
-```
+**http://localhost:3001**
 
-If port `3001` is busy, the server will try the next available port automatically.
+> 💡 If port `3001` is already in use, the server automatically attempts to use the next available port.
 
-## Configuration
+### 🔧 Custom Port Configuration
 
-The app supports a custom port via the `PORT` environment variable:
+DNS Tool supports custom port configuration through the `PORT` environment variable.
+
+**Linux / macOS**
 
 ```bash
 PORT=3002 npm start
 ```
 
-This starts the dashboard on `http://localhost:3002`.
+**Windows PowerShell**
 
-## API endpoints
+```powershell
+$env:PORT=3002
+npm start
+```
 
-The backend exposes a small set of diagnostic endpoints.
+The application will then use:
 
-### `GET /api/advanced`
+```text
+http://localhost:3002
+```
 
-Returns advanced DNS intelligence for the requested domain, including:
+---
 
-- propagation snapshot and TTL data
+## 🔌 API Documentation
+
+DNS Tool exposes JSON-based diagnostic endpoints through its lightweight HTTP backend.
+
+All documented endpoints use the HTTP `GET` method.
+
+### 🚀 1. Advanced DNS Intelligence
+
+`GET /api/advanced`
+
+Returns advanced DNS intelligence for the requested domain.
+
+**Supported diagnostic information:**
+
+- DNS propagation snapshot
+- DNS TTL information
 - DNSSEC detection summary
 - SPF record analysis
 - DKIM record checks
-- DMARC detection summary
+- DMARC detection and evaluation
+- Advanced DNS configuration findings
 
-Example:
+**Query Parameters**
+
+| Parameter | Description |
+|---|---|
+| `domain` | Target domain name |
+
+**Example Request**
 
 ```bash
 curl "http://localhost:3001/api/advanced?domain=example.com"
 ```
 
-### `GET /api/tls`
+### 🔐 2. SSL/TLS Diagnostics
 
-Returns SSL/TLS diagnostics for the requested domain, including:
+`GET /api/tls`
+
+Returns SSL/TLS diagnostic information for the requested domain.
+
+**Information returned:**
 
 - HTTPS response status
 - TLS protocol and cipher
-- certificate issuer and expiration dates
-- hostname validation result
-- certificate subject details
+- Certificate issuer
+- Certificate expiration dates
+- Hostname validation result
+- Certificate subject details
 
-Example:
+**Example Request**
 
 ```bash
 curl "http://localhost:3001/api/tls?domain=example.com"
 ```
 
-### `GET /api/summary`
+### 📊 3. Domain Summary
 
-Returns a combined summary for the target domain, including:
+`GET /api/summary`
 
-- public IP data
-- local IP data
-- geo context
-- active domain metadata
+Returns a combined overview of domain and network information.
+
+**Information returned:**
+
+- Public IP data
+- Local IP information
+- Geolocation context
+- Active domain metadata
 - DNS health information
 
-Example:
+**Example Request**
 
 ```bash
 curl "http://localhost:3001/api/summary?domain=example.com"
 ```
 
-### `GET /api/lookup`
+### 🔎 4. DNS Record Lookup
 
-Returns DNS records for a requested record type.
+`GET /api/lookup`
 
-Query parameters:
+Retrieves DNS records for a specified domain and record type.
 
-- `domain`: domain to inspect
-- `type`: DNS record type such as `A`, `AAAA`, `NS`, `MX`, `TXT`, or `PTR`
+**Query Parameters**
 
-Example:
+| Parameter | Description |
+|---|---|
+| `domain` | Domain to inspect |
+| `type` | Requested DNS record type |
+
+**Supported record types:**
+
+`A` · `AAAA` · `NS` · `MX` · `TXT` · `PTR`
+
+**Example Request**
 
 ```bash
 curl "http://localhost:3001/api/lookup?domain=example.com&type=A"
 ```
 
-### `GET /api/health`
+### ❤️ 5. Domain Health Check
 
-Returns the domain health model, including:
+`GET /api/health`
 
-- record presence checks
-- website reachability
-- reverse DNS status
-- overall grade and score
+Returns the domain health model and diagnostic results.
 
-Example:
+**Information returned:**
+
+- DNS record presence checks
+- Website reachability
+- Reverse DNS status
+- Overall health grade
+- Health score
+
+**Example Request**
 
 ```bash
 curl "http://localhost:3001/api/health?domain=example.com"
 ```
 
-## Security and hardening notes
+---
 
-The project includes several safety improvements to reduce abuse and weak input handling:
+## 🛡️ Security & Hardening
 
-- domain validation before lookup
-- normalized hostname handling
-- blocked unsupported or malformed inputs
-- request rate limiting
-- timeout handling for outbound DNS operations
-- guarded HTTP health checks to reject unsafe URLs and credentials
-- structured error responses instead of leaking raw failures in an uncontrolled way
+Security is an important consideration because DNS Tool processes user-provided domains and performs outbound network requests.
 
-These protections are important because the tool makes outbound requests and works with user-provided domains.
+The current implementation includes several protective measures:
 
-## External services used
+- ✅ Domain validation before DNS operations
+- ✅ Normalized hostname handling
+- ✅ Rejection of unsupported and malformed inputs
+- ✅ Request rate limiting
+- ✅ Timeout handling for outbound DNS operations
+- ✅ Guarded HTTP health checks
+- ✅ Rejection of unsafe URLs and embedded credentials
+- ✅ Structured API error responses
+- ✅ Controlled handling of outbound requests
 
-The app collects some information from public services:
+These measures help reduce misuse, improve reliability, and provide safer handling of user input.
 
-- `https://api.ipify.org?format=json` for IPv4
-- `https://api64.ipify.org?format=json` for IPv6
-- `https://ipapi.co/{ip}/json/` for geo metadata
+---
 
-These services enrich the dashboard with public IP and geographic context.
+## 🌐 External Services
 
-## Current roadmap
+DNS Tool uses public services to enrich network and geolocation information.
 
-The project is already usable as a DNS diagnostics dashboard, and it is structured for continued growth.
+| Service | Purpose |
+|---|---|
+| [ipify IPv4 API](https://api.ipify.org?format=json) | Public IPv4 detection |
+| [ipify IPv6 API](https://api64.ipify.org?format=json) | Public IPv6 detection |
+| [ipapi](https://ipapi.co/) | IP geolocation metadata |
 
-### Phase 1: backend foundation and security
+> **Note:** These services are external dependencies. Their availability and accuracy depend on the respective providers.
 
-Completed in the current build:
+---
 
-- input validation and safe domain handling
-- DNS caching and query timeouts
-- API error handling
-- rate limiting
-- secure HTTP health checks
+## 🗺️ Development Roadmap
 
-### Phase 2: advanced DNS intelligence
+The project is structured for continued development and expansion into a more comprehensive DNS diagnostics platform.
 
-Implemented in the current build:
+### ✅ Phase 1 — Backend Foundation & Security
 
-- DNS propagation snapshot and TTL review
-- DNSSEC detection summary
-- SPF analysis
-- DKIM checks
-- DMARC evaluation
-- richer advanced DNS report data
+**Implemented**
 
-### Phase 3: SSL/TLS diagnostics
+- [x] Domain input validation
+- [x] Safe hostname handling
+- [x] DNS caching and query timeouts
+- [x] API error handling
+- [x] Request rate limiting
+- [x] Secure HTTP health checks
 
-Implemented in the current build:
+### ✅ Phase 2 — Advanced DNS Intelligence
 
-- certificate issuer and expiration checks
-- hostname validation
-- TLS connection diagnostics
-- HTTPS status verification
+**Implemented**
 
-## Development workflow
+- [x] DNS propagation snapshot
+- [x] DNS TTL review
+- [x] DNSSEC detection summary
+- [x] SPF record analysis
+- [x] DKIM record checks
+- [x] DMARC evaluation
+- [x] Advanced DNS report data
 
-The app is intentionally simple to work on:
+### ✅ Phase 3 — SSL/TLS Diagnostics
 
-1. Modify server logic in `server.js`
-2. Update UI markup in `public/index.html`
-3. Adjust styles in `public/styles.css`
-4. Update rendering and client logic in `public/app.js`
-5. Run the app locally and validate the endpoints from a browser or `curl`
+**Implemented**
 
-## Troubleshooting
+- [x] Certificate issuer inspection
+- [x] Certificate expiration checks
+- [x] Hostname validation
+- [x] TLS connection diagnostics
+- [x] HTTPS status verification
 
-### The page is blank or the UI does not load
+### 🚀 Phase 4 — Future Enhancements
+
+**Planned**
+
+- [ ] JSON and CSV report export
+- [ ] Historical domain diagnostics
+- [ ] Advanced DNS monitoring
+- [ ] Enhanced health scoring
+- [ ] Advanced report filtering
+- [ ] Additional DNS record types
+- [ ] Extended DNSSEC analysis
+- [ ] Improved accessibility and UI experience
+
+---
+
+## 🧑‍💻 Development Workflow
+
+DNS Tool is intentionally straightforward to maintain and extend.
+
+1. Modify backend logic in `server.js`.
+2. Update dashboard markup in `public/index.html`.
+3. Customize interface styles in `public/styles.css`.
+4. Update frontend functionality in `public/app.js`.
+5. Start the application using `npm start`.
+6. Validate the dashboard and API endpoints using a browser or `curl`.
+
+---
+
+## 🧰 Troubleshooting
+
+<details>
+<summary><strong>❌ The dashboard is blank or does not load</strong></summary>
 
 Make sure the server is running:
 
@@ -324,40 +592,116 @@ Make sure the server is running:
 npm start
 ```
 
-Then verify the app is responding on the expected port:
+Check whether the server responds:
 
 ```bash
 curl -I http://localhost:3001
 ```
 
-### DNS records return empty
+Also verify that the expected port is available.
+
+</details>
+
+<details>
+<summary><strong>🔎 DNS records return empty results</strong></summary>
 
 Possible causes:
 
-- the domain is not valid
-- the record type is not published for that domain
-- the domain does not exist
-- the network environment blocks or filters DNS requests
+- The domain is invalid or does not exist.
+- The requested record type is not published.
+- DNS propagation is incomplete.
+- Your network blocks or filters DNS requests.
 
-### Geo data looks missing
+</details>
 
-This usually means one of the upstream geo or IP services is unavailable or blocked. The app gracefully falls back to `N/A` values where possible.
+<details>
+<summary><strong>🌍 Geolocation information is missing</strong></summary>
 
-## Future improvements
+Geolocation information depends on external IP lookup services.
 
-Potential enhancements include:
+Missing information may indicate:
 
-- export to JSON or CSV
-- more record types and advanced parsing
-- historical domain checks
-- richer health scoring model
-- improved report export and filtering
-- broader SSL and DNSSEC support
-- more polished UI states and accessibility enhancements
+- An upstream service is unavailable.
+- The network blocks external requests.
+- The provider cannot identify the requested IP.
 
-## Summary
+The application falls back to `N/A` values where possible.
 
-DNS Tool is a practical, lightweight domain diagnostics dashboard for learning, troubleshooting, and quick validation. It offers a simple workflow: enter a domain, inspect records, review health signals, and analyze public network context from one place.
+</details>
 
-It is well suited to local diagnostics, early-stage monitoring, and future expansion into more advanced DNS and TLS analysis.
+<details>
+<summary><strong>⚙️ Port 3001 is already in use</strong></summary>
 
+Start the application using another port:
+
+```bash
+PORT=3002 npm start
+```
+
+</details>
+
+---
+
+## 🤝 Contributing
+
+Contributions, bug reports, feature suggestions, and improvements are welcome!
+
+To contribute:
+
+1. Fork the repository.
+2. Create a new feature branch.
+3. Implement your changes.
+4. Test your modifications.
+5. Submit a Pull Request.
+
+For major changes, consider opening an issue first to discuss your proposal.
+
+---
+
+## 📜 License
+
+This project is distributed under the **MIT License**.
+
+See the `LICENSE` file for additional details.
+
+---
+
+## ⭐ Support the Project
+
+If you find DNS Tool useful, consider supporting its development:
+
+- ⭐ Star the repository.
+- 🐛 Report bugs and issues.
+- 💡 Suggest new features.
+- 🔀 Submit improvements.
+- 📢 Share the project with other developers.
+
+Every contribution and suggestion is appreciated!
+
+---
+
+## 📌 Project Summary
+
+**DNS Tool** is a practical, lightweight, and extensible domain diagnostics dashboard designed to simplify DNS and network troubleshooting.
+
+It combines:
+
+- 🔎 Core DNS record analysis
+- 🚀 Advanced DNS intelligence
+- 🛡️ DNSSEC and email security inspection
+- ❤️ Domain health evaluation
+- 🔐 SSL/TLS diagnostics
+- 🌍 Public IP and geolocation information
+- 📊 Interactive diagnostic reporting
+
+Whether you're a developer, system administrator, or network enthusiast, DNS Tool provides a convenient way to inspect domains and understand their DNS configuration.
+
+<p align="center">
+  <strong>🌐 One Dashboard. Complete DNS Visibility. Smarter Diagnostics.</strong>
+  <br /><br />
+  <strong>Built with ❤️ using Node.js</strong>
+  <br />
+  <sub>DNS Tool — Advanced DNS & Network Diagnostics</sub>
+  <br />
+  <sub>Copy rights Artan V.</sub>
+</p>
