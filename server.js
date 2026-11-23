@@ -262,6 +262,120 @@ async function getDmarc(domain) {
   return flattened;
 }
 
+async function getDnssecAnalysis(domain) {
+  const safeDomain = validateDomain(domain);
+
+  try {
+    const records = await withTimeout(() => dns.promises.resolveAny(safeDomain), 6000, []);
+    const dnskey = records.filter((record) => record && record.type === 'DNSKEY');
+    const ds = records.filter((record) => record && record.type === 'DS');
+    const rrsig = records.filter((record) => record && record.type === 'RRSIG');
+
+    return {
+      enabled: dnskey.length > 0 || ds.length > 0 || rrsig.length > 0,
+      summary: dnskey.length || ds.length || rrsig.length ? 'DNSSEC records detected.' : 'No DNSSEC records were found.',
+      details: {
+        dnskey: dnskey.map((record) => record.data || JSON.stringify(record)).slice(0, 3),
+        ds: ds.map((record) => record.data || JSON.stringify(record)).slice(0, 3),
+        rrsig: rrsig.map((record) => record.data || JSON.stringify(record)).slice(0, 3)
+      }
+    };
+  } catch (error) {
+    return {
+      enabled: false,
+      summary: 'Unable to verify DNSSEC records for this domain.',
+      details: { dnskey: [], ds: [], rrsig: [] },
+      error: error.message
+    };
+  }
+}
+
+async function getPropagationSnapshot(domain) {
+  const safeDomain = validateDomain(domain);
+
+  try {
+    const aRecords = await lookupDns(safeDomain, 'A');
+    const answer = await withTimeout(() => dns.promises.resolve4(safeDomain, { ttl: true }), 5000, []);
+    const ttlValues = Array.isArray(answer)
+      ? answer
+          .map((item) => (typeof item === 'object' && item && item.ttl !== undefined ? Number(item.ttl) : null))
+          .filter((value) => value !== null)
+      : [];
+
+    const ttl = ttlValues.length ? Math.min(...ttlValues) : null;
+
+    return {
+      status: aRecords.length ? 'Likely propagated' : 'No A record data detected',
+      summary: aRecords.length ? `Current A data returned ${aRecords.length} visible records.` : 'No A records were returned for this domain.',
+      ttl,
+      records: aRecords.slice(0, 5)
+    };
+  } catch (error) {
+    return {
+      status: 'Unavailable',
+      summary: 'Propagation data could not be validated from the current resolver.',
+      ttl: null,
+      records: [],
+      error: error.message
+    };
+  }
+}
+
+async function getMailSecurityAnalysis(domain) {
+  const safeDomain = validateDomain(domain);
+  const txtRecords = await lookupDns(safeDomain, 'TXT');
+  const spf = txtRecords.filter((entry) => /v=spf1/i.test(String(entry)));
+
+  const dkimTargets = [
+    `default._domainkey.${safeDomain}`,
+    `selector1._domainkey.${safeDomain}`,
+    `selector2._domainkey.${safeDomain}`
+  ];
+
+  const dkim = [];
+  for (const target of dkimTargets) {
+    try {
+      const values = await lookupDns(target, 'TXT');
+      const matched = values.filter((entry) => /v=dkim1/i.test(String(entry)));
+      if (matched.length) {
+        dkim.push({ domain: target, records: matched });
+      }
+    } catch (error) {
+      // ignore missing DKIM records
+    }
+  }
+
+  const dmarc = await getDmarc(safeDomain);
+
+  return {
+    spf,
+    dkim,
+    dmarc,
+    summary: {
+      spfDetected: spf.length > 0,
+      dkimDetected: dkim.length > 0,
+      dmarcDetected: dmarc.length > 0
+    }
+  };
+}
+
+async function getAdvancedDnsAnalysis(domain) {
+  const safeDomain = validateDomain(domain);
+
+  const [propagation, dnssec, mailSecurity] = await Promise.all([
+    getPropagationSnapshot(safeDomain),
+    getDnssecAnalysis(safeDomain),
+    getMailSecurityAnalysis(safeDomain)
+  ]);
+
+  return {
+    domain: safeDomain,
+    propagation,
+    dnssec,
+    mailSecurity
+  };
+}
+
 async function getReverseDns(domain) {
   const safeDomain = validateDomain(domain);
   const aRecords = await lookupDns(safeDomain, 'A');
@@ -433,7 +547,7 @@ async function getTlsDiagnostics(domain) {
 async function getDomainInfo(domain) {
   const safeDomain = validateDomain(domain);
 
-  const [a, aaaa, ns, mx, txt, dmarc, reverse, tls] = await Promise.all([
+  const [a, aaaa, ns, mx, txt, dmarc, reverse, tls, advanced] = await Promise.all([
     lookupDns(safeDomain, 'A'),
     lookupDns(safeDomain, 'AAAA'),
     lookupDns(safeDomain, 'NS'),
@@ -441,7 +555,8 @@ async function getDomainInfo(domain) {
     lookupDns(safeDomain, 'TXT'),
     getDmarc(safeDomain),
     getReverseDns(safeDomain),
-    getTlsDiagnostics(safeDomain)
+    getTlsDiagnostics(safeDomain),
+    getAdvancedDnsAnalysis(safeDomain)
   ]);
 
   const health = await getHttpHealth(safeDomain);
@@ -472,6 +587,7 @@ async function getDomainInfo(domain) {
     primaryIp,
     health,
     tls,
+    advanced,
     healthSummary: {
       grade,
       score,
@@ -622,6 +738,19 @@ function createServer() {
       try {
         const safeDomain = validateDomain(domain);
         const result = await getTlsDiagnostics(safeDomain);
+        sendJson(response, 200, result);
+      } catch (error) {
+        const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;
+        sendJson(response, code, { error: error.message, status: 'error' });
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/advanced') {
+      const domain = url.searchParams.get('domain') || 'example.com';
+      try {
+        const safeDomain = validateDomain(domain);
+        const result = await getAdvancedDnsAnalysis(safeDomain);
         sendJson(response, 200, result);
       } catch (error) {
         const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;

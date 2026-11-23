@@ -377,7 +377,7 @@ button.secondary {
 
 .detail-pane-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+  grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
 }
@@ -796,10 +796,10 @@ button.secondary {
 
 .report-grid {
   display: grid;
-  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
   gap: 0;
   width: 100%;
-  min-width: 740px;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -948,7 +948,7 @@ button.secondary {
 .report-container {
   width: 100%;
   margin-top: 8px;
-  overflow-x: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
 }
@@ -961,6 +961,10 @@ button.secondary {
   .detail-pane-layout {
     grid-template-columns: 1fr;
   }
+
+  .report-grid {
+    grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 700px) {
@@ -971,6 +975,12 @@ button.secondary {
   .report-label {
     border-right: none;
     border-bottom: 1px solid var(--border);
+  }
+
+  .report-label,
+  .report-value {
+    display: block;
+    width: 100%;
   }
 
   .detail-table tr,

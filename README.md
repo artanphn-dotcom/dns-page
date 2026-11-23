@@ -168,6 +168,22 @@ This starts the dashboard on `http://localhost:3002`.
 
 The backend exposes a small set of diagnostic endpoints.
 
+### `GET /api/advanced`
+
+Returns advanced DNS intelligence for the requested domain, including:
+
+- propagation snapshot and TTL data
+- DNSSEC detection summary
+- SPF record analysis
+- DKIM record checks
+- DMARC detection summary
+
+Example:
+
+```bash
+curl "http://localhost:3001/api/advanced?domain=example.com"
+```
+
 ### `GET /api/tls`
 
 Returns SSL/TLS diagnostics for the requested domain, including:
@@ -270,12 +286,14 @@ Completed in the current build:
 
 ### Phase 2: advanced DNS intelligence
 
-Planned next milestones:
+Implemented in the current build:
 
-- DNS propagation checker
-- DNSSEC analysis
-- SPF, DKIM, and DMARC analyzer improvements
-- richer DNS record inspection
+- DNS propagation snapshot and TTL review
+- DNSSEC detection summary
+- SPF analysis
+- DKIM checks
+- DMARC evaluation
+- richer advanced DNS report data
 
 ### Phase 3: SSL/TLS diagnostics
 

@@ -40,9 +40,11 @@ function normalizeDomain(value) {
 
 function formatValue(value, fallback = 'N/A') {
   if (value === undefined || value === null || value === '') return fallback;
-  if (Array.isArray(value)) return value.length ? value.join(', ') : fallback;
+  if (Array.isArray(value)) {
+    return value.length ? value.map((item) => formatValue(item, fallback)).join('<br>') : fallback;
+  }
   if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
+  return String(value).replace(/\n/g, '<br>');
 }
 
 function formatCheckLabel(name) {
@@ -195,7 +197,8 @@ function renderRecordList(records, fallbackMessage = 'No records found.') {
 
   records.forEach((record) => {
     const item = document.createElement('li');
-    item.textContent = typeof record === 'object' ? JSON.stringify(record) : record;
+    const content = typeof record === 'object' ? JSON.stringify(record) : String(record);
+    item.innerHTML = content.replace(/\n/g, '<br>');
     list.appendChild(item);
   });
 }
@@ -241,6 +244,7 @@ function applySummary(summary) {
 function getFullReportRows(summary) {
   const { summary: overview, geo, domainInfo, myGeo } = summary || {};
   const tls = domainInfo?.tls || {};
+  const advanced = domainInfo?.advanced || {};
 
   return [
     ['Domain', domainInfo?.domain || 'N/A'],
@@ -262,6 +266,10 @@ function getFullReportRows(summary) {
     ['TXT Records', (domainInfo?.txt || []).join(', ') || 'N/A'],
     ['DMARC', (domainInfo?.dmarc || []).join(', ') || 'N/A'],
     ['Reverse DNS', (domainInfo?.reverse || []).join(', ') || 'N/A'],
+    ['Propagation Status', advanced?.propagation?.status || 'N/A'],
+    ['DNSSEC Status', advanced?.dnssec?.enabled ? 'Enabled' : 'Not detected'],
+    ['SPF Policies', (advanced?.mailSecurity?.spf || []).join(', ') || 'N/A'],
+    ['DKIM Records', (advanced?.mailSecurity?.dkim || []).map((item) => `${item.domain}: ${item.records.join(', ')}`).join(' | ') || 'N/A'],
     ['Health Grade', domainInfo?.healthSummary?.grade || 'N/A'],
     ['HTTP Checks', (domainInfo?.health || []).map((item) => `${item.scheme.toUpperCase()}: ${item.status}`).join(' | ') || 'N/A'],
     ['HTTPS Status', tls?.https?.status ?? 'N/A'],
@@ -451,6 +459,66 @@ function renderToolDetails() {
           ${checks.map((item) => `<tr><td>${item.url}</td><td>${item.status}</td><td>${item.ok ? 'Reachable' : 'Unavailable'}</td></tr>`).join('')}
         </tbody>
       </table>
+    `;
+    return;
+  }
+
+  if (tool === 'advanced') {
+    const advanced = domainInfo?.advanced || {};
+    const propagation = advanced.propagation || {};
+    const dnssec = advanced.dnssec || {};
+    const mailSecurity = advanced.mailSecurity || {};
+    const spf = Array.isArray(mailSecurity.spf) ? mailSecurity.spf : [];
+    const dkim = Array.isArray(mailSecurity.dkim) ? mailSecurity.dkim : [];
+    const dmarc = Array.isArray(mailSecurity.dmarc) ? mailSecurity.dmarc : [];
+    const hasAnyAdvancedData = Boolean(
+      propagation.status ||
+      propagation.summary ||
+      propagation.ttl !== null && propagation.ttl !== undefined ||
+      propagation.records?.length ||
+      dnssec.enabled ||
+      dnssec.summary ||
+      spf.length ||
+      dkim.length ||
+      dmarc.length
+    );
+
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>DNS intelligence</h3>
+        <span class="detail-tag">ADVANCED</span>
+      </div>
+      ${!hasAnyAdvancedData ? `
+        <div class="empty-state">
+          <strong>No advanced DNS intelligence available</strong>
+          <span>This domain does not currently publish DNSSEC, SPF, DKIM, DMARC, or propagation details that the resolver can report.</span>
+        </div>
+      ` : `
+        <div class="detail-summary-grid">
+          <div class="metric-box"><span>Propagation</span><strong>${propagation.status || 'Not available'}</strong></div>
+          <div class="metric-box"><span>TTL</span><strong>${propagation.ttl ?? 'Not available'}</strong></div>
+          <div class="metric-box"><span>DNSSEC</span><strong>${dnssec.enabled ? 'Enabled' : 'Not detected'}</strong></div>
+          <div class="metric-box"><span>SPF</span><strong>${spf.length ? 'Detected' : 'Not detected'}</strong></div>
+        </div>
+        <div class="detail-card">
+          <h3>Propagation snapshot</h3>
+          <p>${formatValue(propagation.summary || 'No propagation information available')}</p>
+          ${propagation.records?.length ? `<ul class="record-list-inline">${propagation.records.map((entry) => `<li>${formatValue(entry)}</li>`).join('')}</ul>` : '<div class="empty-state"><strong>No propagation data</strong><span>No A records were returned for this domain.</span></div>'}
+        </div>
+        <div class="detail-card">
+          <h3>DNSSEC analysis</h3>
+          <p>${formatValue(dnssec.summary || 'No DNSSEC summary available')}</p>
+          ${dnssec.details ? `<ul class="record-list-inline">${Object.entries(dnssec.details).flatMap(([key, values]) => values.map((item) => `<li>${key.toUpperCase()}: ${formatValue(item)}</li>`)).join('')}</ul>` : ''}
+        </div>
+        <div class="detail-card">
+          <h3>Mail security policies</h3>
+          <ul class="record-list-inline">
+            ${spf.length ? spf.map((entry) => `<li>SPF: ${formatValue(entry)}</li>`).join('') : '<li>No SPF record found</li>'}
+            ${dkim.length ? dkim.map((entry) => `<li>DKIM: ${formatValue(entry.domain)} - ${formatValue(entry.records.join(', '))}</li>`).join('') : '<li>No DKIM record found</li>'}
+            ${dmarc.length ? dmarc.map((entry) => `<li>DMARC: ${formatValue(entry)}</li>`).join('') : '<li>No DMARC record found</li>'}
+          </ul>
+        </div>
+      `}
     `;
     return;
   }
