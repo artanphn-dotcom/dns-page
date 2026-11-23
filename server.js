@@ -326,17 +326,122 @@ async function getHttpHealth(domain) {
   return results;
 }
 
+async function getTlsDiagnostics(domain) {
+  const safeDomain = validateDomain(domain);
+  const result = {
+    domain: safeDomain,
+    https: { status: 'ERR', ok: false },
+    tls: { connected: false, protocol: 'N/A', cipher: 'N/A', hostnameValid: false, error: null },
+    certificate: null
+  };
+
+  try {
+    const response = await fetch(`https://${safeDomain}`, {
+      method: 'GET',
+      redirect: 'manual',
+      signal: AbortSignal.timeout(12000),
+      headers: {
+        'User-Agent': 'DNS-Tool/1.0',
+        Accept: 'text/html,application/xhtml+xml'
+      },
+      cache: 'no-store'
+    });
+    result.https = {
+      status: response.status,
+      ok: response.ok || (response.status >= 300 && response.status < 400)
+    };
+  } catch (error) {
+    result.https = { status: 'ERR', ok: false, error: error.message };
+  }
+
+  let socket;
+  try {
+    socket = tls.connect({
+      host: safeDomain,
+      port: 443,
+      servername: safeDomain,
+      rejectUnauthorized: false,
+      ALPNProtocols: ['http/1.1', 'h2'],
+      timeout: 8000
+    });
+
+    await new Promise((resolve, reject) => {
+      const onSecure = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = (error) => {
+        cleanup();
+        reject(error);
+      };
+      const onTimeout = () => {
+        cleanup();
+        reject(new Error('TLS handshake timed out'));
+      };
+
+      function cleanup() {
+        socket.removeListener('secureConnect', onSecure);
+        socket.removeListener('error', onError);
+        socket.removeListener('timeout', onTimeout);
+      }
+
+      socket.once('secureConnect', onSecure);
+      socket.once('error', onError);
+      socket.once('timeout', onTimeout);
+      socket.setTimeout(8000);
+    });
+
+    const cert = socket.getPeerCertificate ? socket.getPeerCertificate() : null;
+    const cipher = socket.getCipher ? socket.getCipher() : null;
+    const protocol = socket.getProtocol ? socket.getProtocol() : 'N/A';
+    const hostnameCheck = cert && typeof tls.checkServerIdentity === 'function' ? tls.checkServerIdentity(safeDomain, cert) : null;
+
+    result.tls = {
+      connected: true,
+      protocol: protocol || 'N/A',
+      cipher: cipher ? (cipher.standardName || cipher.name || 'N/A') : 'N/A',
+      hostnameValid: !hostnameCheck,
+      error: hostnameCheck ? hostnameCheck.message : null
+    };
+
+    if (cert) {
+      result.certificate = {
+        subject: cert.subject ? cert.subject.CN || cert.subjectAltName || 'N/A' : 'N/A',
+        issuer: cert.issuer ? cert.issuer.O || cert.issuer.CN || JSON.stringify(cert.issuer) : 'N/A',
+        valid_from: cert.valid_from || 'N/A',
+        valid_to: cert.valid_to || 'N/A',
+        subjectAltName: cert.subjectaltname || 'N/A'
+      };
+    }
+  } catch (error) {
+    result.tls = {
+      connected: false,
+      protocol: 'N/A',
+      cipher: 'N/A',
+      hostnameValid: false,
+      error: error.message
+    };
+  } finally {
+    if (socket) {
+      socket.end();
+    }
+  }
+
+  return result;
+}
+
 async function getDomainInfo(domain) {
   const safeDomain = validateDomain(domain);
 
-  const [a, aaaa, ns, mx, txt, dmarc, reverse] = await Promise.all([
+  const [a, aaaa, ns, mx, txt, dmarc, reverse, tls] = await Promise.all([
     lookupDns(safeDomain, 'A'),
     lookupDns(safeDomain, 'AAAA'),
     lookupDns(safeDomain, 'NS'),
     lookupDns(safeDomain, 'MX'),
     lookupDns(safeDomain, 'TXT'),
     getDmarc(safeDomain),
-    getReverseDns(safeDomain)
+    getReverseDns(safeDomain),
+    getTlsDiagnostics(safeDomain)
   ]);
 
   const health = await getHttpHealth(safeDomain);
@@ -366,6 +471,7 @@ async function getDomainInfo(domain) {
     reverse,
     primaryIp,
     health,
+    tls,
     healthSummary: {
       grade,
       score,
@@ -504,6 +610,19 @@ function createServer() {
         const safeDomain = validateDomain(domain);
         const summary = await getDomainInfo(safeDomain);
         sendJson(response, 200, summary);
+      } catch (error) {
+        const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;
+        sendJson(response, code, { error: error.message, status: 'error' });
+      }
+      return;
+    }
+
+    if (url.pathname === '/api/tls') {
+      const domain = url.searchParams.get('domain') || 'example.com';
+      try {
+        const safeDomain = validateDomain(domain);
+        const result = await getTlsDiagnostics(safeDomain);
+        sendJson(response, 200, result);
       } catch (error) {
         const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;
         sendJson(response, code, { error: error.message, status: 'error' });

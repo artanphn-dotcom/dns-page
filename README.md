@@ -168,6 +168,22 @@ This starts the dashboard on `http://localhost:3002`.
 
 The backend exposes a small set of diagnostic endpoints.
 
+### `GET /api/tls`
+
+Returns SSL/TLS diagnostics for the requested domain, including:
+
+- HTTPS response status
+- TLS protocol and cipher
+- certificate issuer and expiration dates
+- hostname validation result
+- certificate subject details
+
+Example:
+
+```bash
+curl "http://localhost:3001/api/tls?domain=example.com"
+```
+
 ### `GET /api/summary`
 
 Returns a combined summary for the target domain, including:
@@ -263,7 +279,7 @@ Planned next milestones:
 
 ### Phase 3: SSL/TLS diagnostics
 
-Planned future work:
+Implemented in the current build:
 
 - certificate issuer and expiration checks
 - hostname validation

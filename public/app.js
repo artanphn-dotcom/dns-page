@@ -240,6 +240,7 @@ function applySummary(summary) {
 
 function getFullReportRows(summary) {
   const { summary: overview, geo, domainInfo, myGeo } = summary || {};
+  const tls = domainInfo?.tls || {};
 
   return [
     ['Domain', domainInfo?.domain || 'N/A'],
@@ -262,7 +263,13 @@ function getFullReportRows(summary) {
     ['DMARC', (domainInfo?.dmarc || []).join(', ') || 'N/A'],
     ['Reverse DNS', (domainInfo?.reverse || []).join(', ') || 'N/A'],
     ['Health Grade', domainInfo?.healthSummary?.grade || 'N/A'],
-    ['HTTP Checks', (domainInfo?.health || []).map((item) => `${item.scheme.toUpperCase()}: ${item.status}`).join(' | ') || 'N/A']
+    ['HTTP Checks', (domainInfo?.health || []).map((item) => `${item.scheme.toUpperCase()}: ${item.status}`).join(' | ') || 'N/A'],
+    ['HTTPS Status', tls?.https?.status ?? 'N/A'],
+    ['TLS Protocol', tls?.tls?.protocol || 'N/A'],
+    ['TLS Cipher', tls?.tls?.cipher || 'N/A'],
+    ['Certificate Issuer', tls?.certificate?.issuer || 'N/A'],
+    ['Certificate Expires', tls?.certificate?.valid_to || 'N/A'],
+    ['Hostname Validation', tls?.tls?.hostnameValid === undefined ? 'N/A' : tls.tls.hostnameValid ? 'Valid' : 'Mismatch']
   ];
 }
 
@@ -444,6 +451,37 @@ function renderToolDetails() {
           ${checks.map((item) => `<tr><td>${item.url}</td><td>${item.status}</td><td>${item.ok ? 'Reachable' : 'Unavailable'}</td></tr>`).join('')}
         </tbody>
       </table>
+    `;
+    return;
+  }
+
+  if (tool === 'tls') {
+    const tls = domainInfo?.tls || {};
+    const cert = tls.certificate || {};
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>SSL/TLS diagnostics</h3>
+        <span class="detail-tag">TLS</span>
+      </div>
+      <div class="tls-grid">
+        <div class="metric-box"><span>HTTPS status</span><strong>${tls.https?.status ?? 'N/A'}</strong></div>
+        <div class="metric-box"><span>Protocol</span><strong>${tls.tls?.protocol || 'N/A'}</strong></div>
+        <div class="metric-box"><span>Cipher</span><strong>${tls.tls?.cipher || 'N/A'}</strong></div>
+        <div class="metric-box"><span>Hostname match</span><strong>${tls.tls?.hostnameValid === undefined ? 'N/A' : tls.tls.hostnameValid ? 'Valid' : 'Mismatch'}</strong></div>
+      </div>
+      <div class="detail-card">
+        <h3>Certificate details</h3>
+        <table class="detail-table">
+          <tbody>
+            <tr><th>Subject</th><td>${formatValue(cert.subject)}</td></tr>
+            <tr><th>Issuer</th><td>${formatValue(cert.issuer)}</td></tr>
+            <tr><th>Valid from</th><td>${formatValue(cert.valid_from)}</td></tr>
+            <tr><th>Valid to</th><td>${formatValue(cert.valid_to)}</td></tr>
+            <tr><th>SubjectAltName</th><td>${formatValue(cert.subjectAltName)}</td></tr>
+            <tr><th>Connection note</th><td>${formatValue(tls.tls?.error || 'No certificate or connection issue detected')}</td></tr>
+          </tbody>
+        </table>
+      </div>
     `;
     return;
   }
