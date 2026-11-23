@@ -1,6 +1,10 @@
 # 🌐 DNS Tool — Advanced DNS Diagnostics Dashboard
 
 <p align="center">
+  <img src="./1.png" alt="DNS Tool dashboard screenshot" width="1200" />
+</p>
+
+<p align="center">
   <strong>Complete DNS, Domain Health, Network & SSL/TLS Intelligence in One Dashboard</strong>
   <br />
   A lightweight, responsive and security-focused domain diagnostics platform powered by Node.js.
