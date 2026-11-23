@@ -375,6 +375,17 @@ button.secondary {
   width: 100%;
 }
 
+.detail-pane-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.detail-summary-card {
+  min-width: 0;
+}
+
 .health-check-list {
   list-style: none;
   margin: 0;
@@ -514,11 +525,16 @@ button.secondary {
 }
 
 .detail-card {
-  margin-top: 12px;
+  margin-top: 0;
   padding: 16px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.02);
+}
+
+.detail-card h3 {
+  margin-bottom: 12px;
+  font-size: 1.05rem;
 }
 
 .metric-box {
@@ -782,6 +798,7 @@ button.secondary {
   grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
   gap: 0;
   width: 100%;
+  min-width: 740px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -933,6 +950,16 @@ button.secondary {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
+}
+
+#fullReportTable {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .detail-pane-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 700px) {

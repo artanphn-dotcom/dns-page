@@ -270,17 +270,24 @@ function renderFullReportTable(summary) {
   const reportTable = document.getElementById('fullReportTable');
   if (!reportTable) return;
 
+  if (!summary) {
+    reportTable.innerHTML = `
+      <div class="empty-state" style="grid-column: 1/-1; border: 1px dashed var(--border);">
+        <strong>No report data yet</strong>
+        <span>Search for a domain to generate the full report.</span>
+      </div>
+    `;
+    return;
+  }
+
   const rows = getFullReportRows(summary);
-  reportTable.innerHTML = `
-    <div class="report-grid" role="table" aria-label="Complete domain diagnostics report">
-      ${rows.map(([label, value]) => `
-        <div class="report-row" role="row">
-          <div class="report-label" role="rowheader">${label}</div>
-          <div class="report-value" role="cell">${formatValue(value)}</div>
-        </div>
-      `).join('')}
+  reportTable.innerHTML = rows.map(([label, value]) => `
+    <div class="report-row" role="row">
+      <div class="report-label" role="rowheader">${label}</div>
+      <div class="report-value" role="cell">${formatValue(value)}</div>
     </div>
-  `;
+  `).join('');
+  reportTable.setAttribute('aria-label', 'Complete domain diagnostics report');
 }
 
 function renderToolDetails() {
@@ -302,19 +309,24 @@ function renderToolDetails() {
     }).join('');
 
     detailPanel.innerHTML = `
-      <div class="detail-header-row">
-        <h3>Domain overview</h3>
-        <span class="detail-tag">${domainInfo?.healthSummary?.grade || 'Unknown'}</span>
-      </div>
-      <div class="detail-summary-grid">
-        <div class="metric-box"><span>Domain</span><strong>${domainInfo?.domain || 'N/A'}</strong></div>
-        <div class="metric-box"><span>Primary IP</span><strong>${domainInfo?.primaryIp || 'N/A'}</strong></div>
-        <div class="metric-box"><span>Reverse DNS</span><strong>${(domainInfo?.reverse || []).join(', ') || 'N/A'}</strong></div>
-        <div class="metric-box"><span>Public IP</span><strong>${overview?.myIp || 'N/A'}</strong></div>
-      </div>
-      <div class="detail-card">
-        <h3>Health checks</h3>
-        <ul class="health-check-list">${checkItems || '<li class="health-check-item"><span class="health-check-name">No checks available</span></li>'}</ul>
+      <div class="detail-pane-layout">
+        <div class="detail-card detail-summary-card">
+          <div class="detail-header-row">
+            <h3>Domain overview</h3>
+            <span class="detail-tag">${domainInfo?.healthSummary?.grade || 'Unknown'}</span>
+          </div>
+          <div class="detail-summary-grid">
+            <div class="metric-box"><span>Domain</span><strong>${domainInfo?.domain || 'N/A'}</strong></div>
+            <div class="metric-box"><span>Primary IP</span><strong>${domainInfo?.primaryIp || 'N/A'}</strong></div>
+            <div class="metric-box"><span>Reverse DNS</span><strong>${(domainInfo?.reverse || []).join(', ') || 'N/A'}</strong></div>
+            <div class="metric-box"><span>Public IP</span><strong>${overview?.myIp || 'N/A'}</strong></div>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <h3>Health checks</h3>
+          <ul class="health-check-list">${checkItems || '<li class="health-check-item"><span class="health-check-name">No checks available</span></li>'}</ul>
+        </div>
       </div>
     `;
     return;
