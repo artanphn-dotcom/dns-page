@@ -1,0 +1,9 @@
+{
+  "name": "dns-tool",
+  "version": "1.0.0",
+  "description": "DNS lookup and geo intelligence dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DNS Tools</title>
+    <meta name="description" content="DNS validation, reverse lookup, network diagnostics and geo insights in one professional dashboard." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <span class="eyebrow">DNS Tools</span>
+          <h1>Domain DNS Validation</h1>
+          <p class="subtitle">Monitor DNS records, public IP profiles, health signals, and geographic network context from one professional dashboard.</p>
+        </div>
+        <div class="live-pill" aria-label="Live lookup status">
+          <span class="live-dot"></span>
+          Live lookup
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="panel hero-panel">
+          <div class="hero-layout">
+            <div class="search-wrap">
+              <label for="domainInput">Domain</label>
+              <div class="field-row">
+                <input id="domainInput" type="text" value="www.example.com" placeholder="example.com" aria-label="Domain to analyze" />
+                <select id="recordType" aria-label="DNS record type">
+                  <option value="A">A</option>
+                  <option value="AAAA">AAAA</option>
+                  <option value="NS">NS</option>
+                  <option value="MX">MX</option>
+                  <option value="TXT">TXT</option>
+                  <option value="PTR">PTR</option>
+                </select>
+              </div>
+              <div class="button-row">
+                <button id="searchBtn" type="button">Search</button>
+                <button id="currentDomainBtn" class="secondary" type="button">Use current domain</button>
+              </div>
+              <div class="helper-row">
+                <span>Example: example.com</span>
+                <a href="https://www.google.com/search?q=domain+dns+records" target="_blank" rel="noreferrer">DNS docs</a>
+              </div>
+            </div>
+
+            <aside class="health-card" aria-live="polite">
+              <span class="card-label">Domain health</span>
+              <div id="healthBadge" class="health-pill healthy">Healthy</div>
+              <p id="healthSummaryText">Checking current domain status...</p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="panel summary-panel">
+          <div class="section-header">
+            <h2>Summary</h2>
+          </div>
+          <div class="summary-grid">
+            <div class="stat-item">
+              <span class="label">Your IP Address</span>
+              <strong id="myIp">N/A</strong>
+            </div>
+            <div class="stat-item">
+              <span class="label">IPv6</span>
+              <strong id="myIpv6">N/A</strong>
+            </div>
+            <div class="stat-item">
+              <span class="label">Country</span>
+              <strong id="country">N/A</strong>
+            </div>
+            <div class="stat-item">
+              <span class="label">Local IP</span>
+              <strong id="localIp">N/A</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel tools-panel">
+          <div class="section-header">
+            <h2>DNS Toolkit</h2>
+          </div>
+          <div class="tool-grid">
+            <button class="tool-card tool-tab is-active" type="button" data-tool-tab="overview">
+              <span class="tool-icon">◎</span>
+              <h3>Overview</h3>
+              <p>See the full DNS health picture at a glance.</p>
+            </button>
+            <button class="tool-card tool-tab" type="button" data-tool-tab="dns">
+              <span class="tool-icon">A</span>
+              <h3>DNS Lookup</h3>
+              <p>Resolve A and AAAA records quickly.</p>
+            </button>
+            <button class="tool-card tool-tab" type="button" data-tool-tab="reverse">
+              <span class="tool-icon">⇄</span>
+              <h3>Reverse DNS</h3>
+              <p>Map an IP back to a host.</p>
+            </button>
+            <button class="tool-card tool-tab" type="button" data-tool-tab="mx">
+              <span class="tool-icon">MX</span>
+              <h3>Mail Records</h3>
+              <p>Inspect mail exchange routing.</p>
+            </button>
+            <button class="tool-card tool-tab" type="button" data-tool-tab="ns">
+              <span class="tool-icon">NS</span>
+              <h3>Nameservers</h3>
+              <p>Review authoritative records.</p>
+            </button>
+            <button class="tool-card tool-tab" type="button" data-tool-tab="dmarc">
+              <span class="tool-icon">DM</span>
+              <h3>DMARC</h3>
+              <p>Validate anti-spoofing policies.</p>
+            </button>
+            <button class="tool-card tool-tab" type="button" data-tool-tab="health">
+              <span class="tool-icon">⚑</span>
+              <h3>Health Check</h3>
+              <p>Verify reachability and status.</p>
+            </button>
+            <button class="tool-card tool-tab" type="button" data-tool-tab="report">
+              <span class="tool-icon">▣</span>
+              <h3>Full Report</h3>
+              <p>Open the complete domain diagnostics view.</p>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel detail-panel">
+          <div class="section-header">
+            <h2>Diagnostic Detail</h2>
+            <span class="detail-tag-secondary">Select a tool above</span>
+          </div>
+          <div id="detailPanel" class="detail-panel-body" aria-live="polite">
+            <div class="empty-state">
+              <strong>Welcome to DNS Diagnostics</strong>
+              <span>Enter a domain and select a DNS tool from the toolkit above to view detailed diagnostic information. Each tool provides specific insights into different aspects of your domain's DNS configuration.</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="content-grid">
+          <section class="panel geo-panel">
+            <div class="section-header">
+              <h2>Geo Stats of Active Domain</h2>
+            </div>
+            <div class="geo-grid">
+              <div><span>IP</span><strong id="geoIp">N/A</strong></div>
+              <div><span>ISP</span><strong id="geoIsp">N/A</strong></div>
+              <div><span>City</span><strong id="geoCity">N/A</strong></div>
+              <div><span>State</span><strong id="geoState">N/A</strong></div>
+              <div><span>Postal Code</span><strong id="geoPostal">N/A</strong></div>
+              <div><span>Country</span><strong id="geoCountry">N/A</strong></div>
+              <div><span>Latitude</span><strong id="geoLat">N/A</strong></div>
+              <div><span>Longitude</span><strong id="geoLon">N/A</strong></div>
+            </div>
+          </section>
+
+          <section class="panel lookup-panel">
+            <div class="section-header">
+              <h2>DNS Lookup</h2>
+            </div>
+            <div class="record-box">
+              <div class="detail-header">
+                <span class="record-type" id="recordTypeLabel">A</span>
+                <span class="record-domain" id="recordDomain">www.example.com</span>
+              </div>
+              <div id="statusBanner" class="status-banner info">Checking DNS data...</div>
+              <ul id="recordList" class="record-list"></ul>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel full-report-panel">
+          <div class="section-header">
+            <h2>Full Report</h2>
+            <span class="detail-tag-secondary">Report</span>
+          </div>
+          <div class="report-container">
+            <div class="report-grid" id="fullReportTable" role="table" aria-label="Complete domain diagnostics report" aria-live="polite">
+              <div class="empty-state" style="grid-column: 1/-1; border: 1px dashed var(--border);">
+                <strong>No report data yet</strong>
+                <span>Search for a domain to generate the full report.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel info-panel">
+          <div class="section-header">
+            <h2>IP Geo Info</h2>
+          </div>
+          <div class="table-shell">
+            <table>
+              <tbody>
+                <tr><th>Your IP Report</th><td id="ipReport">N/A</td></tr>
+                <tr><th>City</th><td id="ipCity">N/A</td></tr>
+                <tr><th>State</th><td id="ipState">N/A</td></tr>
+                <tr><th>Postal Code</th><td id="ipPostal">N/A</td></tr>
+                <tr><th>Country Code</th><td id="ipCountryCode">N/A</td></tr>
+                <tr><th>Country</th><td id="ipCountry">N/A</td></tr>
+                <tr><th>Latitude</th><td id="ipLat">N/A</td></tr>
+                <tr><th>Longitude</th><td id="ipLon">N/A</td></tr>
+                <tr><th>ISP</th><td id="ipIsp">N/A</td></tr>
+                <tr><th>ASN</th><td id="ipAsn">N/A</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

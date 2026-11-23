@@ -1,0 +1,555 @@
+const domainInput = document.getElementById('domainInput');
+const recordType = document.getElementById('recordType');
+const searchBtn = document.getElementById('searchBtn');
+const currentDomainBtn = document.getElementById('currentDomainBtn');
+const statusBanner = document.getElementById('statusBanner');
+const healthBadge = document.getElementById('healthBadge');
+const healthSummaryText = document.getElementById('healthSummaryText');
+const toolButtons = Array.from(document.querySelectorAll('[data-tool-tab]'));
+
+const labelMap = {
+  A: 'A',
+  AAAA: 'AAAA',
+  NS: 'NS',
+  MX: 'MX',
+  TXT: 'TXT',
+  PTR: 'PTR'
+};
+
+const state = {
+  activeTool: 'overview',
+  summary: null,
+  lookup: null,
+  fetchError: null
+};
+
+function fillField(id, value) {
+  const node = document.getElementById(id);
+  if (node) node.textContent = value ?? 'N/A';
+}
+
+function setStatus(message, type = 'info') {
+  if (!statusBanner) return;
+  statusBanner.textContent = message;
+  statusBanner.className = `status-banner ${type}`;
+}
+
+function normalizeDomain(value) {
+  return (value || 'example.com').trim().replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/\s+/g, '') || 'example.com';
+}
+
+function formatValue(value, fallback = 'N/A') {
+  if (value === undefined || value === null || value === '') return fallback;
+  if (Array.isArray(value)) return value.length ? value.join(', ') : fallback;
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+function formatCheckLabel(name) {
+  const aliases = {
+    hasA: 'A record presence',
+    hasAAAA: 'AAAA record presence',
+    hasNS: 'Nameserver records',
+    hasMX: 'Mail exchanger records',
+    hasDMARC: 'DMARC policy',
+    websiteReachable: 'Website reachability',
+    hasReverse: 'Reverse DNS'
+  };
+
+  const key = String(name || '').trim();
+  if (aliases[key]) return aliases[key];
+
+  const label = key
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!label) return 'Check';
+  return label.replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function parseMxRecords(records) {
+  if (!Array.isArray(records)) return [];
+
+  return records.map((record) => {
+    if (typeof record === 'string') {
+      try {
+        const parsed = JSON.parse(record);
+        if (parsed && typeof parsed === 'object' && parsed.exchange) {
+          return { priority: parsed.priority ?? 0, exchange: parsed.exchange, value: parsed.exchange };
+        }
+      } catch (error) {
+        // fall through to string-based parsing
+      }
+
+      const match = record.match(/\(?\s*(\d+)\s*\)?\s*(.*)/);
+      if (match) {
+        return { priority: Number(match[1]) || 0, exchange: match[2] || 'N/A', value: match[2] || 'N/A' };
+      }
+
+      return { priority: 0, exchange: record, value: record };
+    }
+
+    if (record && typeof record === 'object') {
+      const exchange = record.exchange || record.host || 'N/A';
+      return { priority: Number(record.priority) || 0, exchange, value: exchange };
+    }
+
+    return { priority: 0, exchange: formatValue(record), value: formatValue(record) };
+  });
+}
+
+function parseDmarcPolicies(value) {
+  const entries = Array.isArray(value) ? value : [value];
+  const rows = [];
+
+  entries.forEach((entry) => {
+    if (!entry) return;
+    const raw = String(entry).trim();
+    if (!raw) return;
+
+    const parts = raw.split(';').filter(Boolean);
+    const map = {};
+
+    parts.forEach((part) => {
+      const [key, ...rest] = part.split('=');
+      if (!key) return;
+      map[key.trim().toLowerCase()] = rest.join('=').trim();
+    });
+
+    rows.push({ raw, policy: map });
+  });
+
+  return rows;
+}
+
+function renderSkeletonState() {
+  const detailPanel = document.getElementById('detailPanel');
+  if (!detailPanel) return;
+
+  detailPanel.innerHTML = `
+    <div class="loading-state" aria-busy="true">
+      <div class="loading-skeleton">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEmptyState(title, message) {
+  const detailPanel = document.getElementById('detailPanel');
+  if (!detailPanel) return;
+
+  detailPanel.innerHTML = `
+    <div class="empty-state">
+      <strong>${title}</strong>
+      <span>${message}</span>
+    </div>
+  `;
+}
+
+function renderErrorState(message) {
+  const detailPanel = document.getElementById('detailPanel');
+  if (!detailPanel) return;
+
+  detailPanel.innerHTML = `
+    <div class="error-state">
+      <strong>Lookup issue</strong>
+      <span>${message}</span>
+    </div>
+  `;
+}
+
+function updateHealthStatus(summary) {
+  const { healthSummary } = summary?.domainInfo || {};
+  if (!healthBadge || !healthSummaryText) return;
+
+  const grade = healthSummary?.grade || 'Unknown';
+  const checks = healthSummary?.checks || {};
+  const checkCount = Object.values(checks).filter(Boolean).length;
+  const totalChecks = Object.keys(checks).length || 1;
+
+  healthBadge.textContent = grade;
+  healthBadge.className = `health-pill ${String(grade).toLowerCase()}`;
+
+  const message = `${checkCount}/${totalChecks} checks passed`;
+  healthSummaryText.textContent = message;
+}
+
+function renderRecordList(records, fallbackMessage = 'No records found.') {
+  const list = document.getElementById('recordList');
+  if (!list) return;
+
+  list.innerHTML = '';
+  if (!records || !records.length) {
+    const item = document.createElement('li');
+    item.textContent = fallbackMessage;
+    list.appendChild(item);
+    return;
+  }
+
+  records.forEach((record) => {
+    const item = document.createElement('li');
+    item.textContent = typeof record === 'object' ? JSON.stringify(record) : record;
+    list.appendChild(item);
+  });
+}
+
+function applySummary(summary) {
+  const { summary: overview, myGeo, geo, domainInfo } = summary;
+
+  fillField('myIp', overview.myIp);
+  fillField('myIpv6', overview.myIpv6);
+  fillField('country', overview.country || myGeo.country || 'N/A');
+  fillField('localIp', overview.localIp);
+
+  fillField('geoIp', geo.ip || 'N/A');
+  fillField('geoIsp', geo.isp || 'N/A');
+  fillField('geoCity', geo.city || 'N/A');
+  fillField('geoState', geo.state || 'N/A');
+  fillField('geoPostal', geo.postal || 'N/A');
+  fillField('geoCountry', geo.country || 'N/A');
+  fillField('geoLat', geo.latitude || 'N/A');
+  fillField('geoLon', geo.longitude || 'N/A');
+
+  fillField('ipReport', overview.myIp || 'N/A');
+  fillField('ipCity', myGeo.city || 'N/A');
+  fillField('ipState', myGeo.region || 'N/A');
+  fillField('ipPostal', myGeo.postal || 'N/A');
+  fillField('ipCountryCode', myGeo.countryCode || 'N/A');
+  fillField('ipCountry', myGeo.country || 'N/A');
+  fillField('ipLat', myGeo.latitude || 'N/A');
+  fillField('ipLon', myGeo.longitude || 'N/A');
+  fillField('ipIsp', myGeo.isp || 'N/A');
+  fillField('ipAsn', myGeo.asn || 'N/A');
+
+  const recordDomain = document.getElementById('recordDomain');
+  if (recordDomain) recordDomain.textContent = domainInfo.domain || normalizeDomain(domainInput.value);
+
+  const typeLabel = document.getElementById('recordTypeLabel');
+  if (typeLabel) typeLabel.textContent = labelMap[recordType.value] || recordType.value;
+
+  updateHealthStatus(summary);
+  renderFullReportTable(summary);
+}
+
+function getFullReportRows(summary) {
+  const { summary: overview, geo, domainInfo, myGeo } = summary || {};
+
+  return [
+    ['Domain', domainInfo?.domain || 'N/A'],
+    ['Primary IP', domainInfo?.primaryIp || 'N/A'],
+    ['Current public IP', overview?.myIp || 'N/A'],
+    ['IPv6', overview?.myIpv6 || 'N/A'],
+    ['Local IP', overview?.localIp || 'N/A'],
+    ['Country', overview?.country || myGeo?.country || 'N/A'],
+    ['Domain IP', geo?.ip || 'N/A'],
+    ['Geo ISP', geo?.isp || 'N/A'],
+    ['Geo City', geo?.city || 'N/A'],
+    ['Geo State', geo?.state || 'N/A'],
+    ['Geo Postal', geo?.postal || 'N/A'],
+    ['Geo Country', geo?.country || 'N/A'],
+    ['A Records', (domainInfo?.a || []).join(', ') || 'N/A'],
+    ['AAAA Records', (domainInfo?.aaaa || []).join(', ') || 'N/A'],
+    ['NS Records', (domainInfo?.ns || []).join(', ') || 'N/A'],
+    ['MX Records', parseMxRecords(domainInfo?.mx || []).map((entry) => `${entry.priority} ${entry.exchange}`).join(', ') || 'N/A'],
+    ['TXT Records', (domainInfo?.txt || []).join(', ') || 'N/A'],
+    ['DMARC', (domainInfo?.dmarc || []).join(', ') || 'N/A'],
+    ['Reverse DNS', (domainInfo?.reverse || []).join(', ') || 'N/A'],
+    ['Health Grade', domainInfo?.healthSummary?.grade || 'N/A'],
+    ['HTTP Checks', (domainInfo?.health || []).map((item) => `${item.scheme.toUpperCase()}: ${item.status}`).join(' | ') || 'N/A']
+  ];
+}
+
+function renderFullReportTable(summary) {
+  const reportTable = document.getElementById('fullReportTable');
+  if (!reportTable) return;
+
+  const rows = getFullReportRows(summary);
+  reportTable.innerHTML = `
+    <div class="report-grid" role="table" aria-label="Complete domain diagnostics report">
+      ${rows.map(([label, value]) => `
+        <div class="report-row" role="row">
+          <div class="report-label" role="rowheader">${label}</div>
+          <div class="report-value" role="cell">${formatValue(value)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderToolDetails() {
+  const detailPanel = document.getElementById('detailPanel');
+  if (!detailPanel || !state.summary) {
+    renderSkeletonState();
+    return;
+  }
+
+  const { domainInfo, summary: overview } = state.summary;
+  const selectedType = recordType.value;
+  const tool = state.activeTool;
+
+  if (tool === 'overview') {
+    const checks = domainInfo?.healthSummary?.checks || {};
+    const checkItems = Object.entries(checks).map(([name, passed]) => {
+      const formattedName = formatCheckLabel(name);
+      return `<li class="health-check-item"><span class="health-check-name">${formattedName}</span><span class="status-pill ${passed ? 'good' : 'warn'}">${passed ? 'Pass' : 'Pending'}</span></li>`;
+    }).join('');
+
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>Domain overview</h3>
+        <span class="detail-tag">${domainInfo?.healthSummary?.grade || 'Unknown'}</span>
+      </div>
+      <div class="detail-summary-grid">
+        <div class="metric-box"><span>Domain</span><strong>${domainInfo?.domain || 'N/A'}</strong></div>
+        <div class="metric-box"><span>Primary IP</span><strong>${domainInfo?.primaryIp || 'N/A'}</strong></div>
+        <div class="metric-box"><span>Reverse DNS</span><strong>${(domainInfo?.reverse || []).join(', ') || 'N/A'}</strong></div>
+        <div class="metric-box"><span>Public IP</span><strong>${overview?.myIp || 'N/A'}</strong></div>
+      </div>
+      <div class="detail-card">
+        <h3>Health checks</h3>
+        <ul class="health-check-list">${checkItems || '<li class="health-check-item"><span class="health-check-name">No checks available</span></li>'}</ul>
+      </div>
+    `;
+    return;
+  }
+
+  if (tool === 'dns') {
+    const records = state.lookup?.records || [];
+    if (!records.length) {
+      renderEmptyState('No DNS records found', `No ${selectedType} records are available for ${domainInfo?.domain || 'this domain'}.`);
+      return;
+    }
+
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>${selectedType} record details</h3>
+        <span class="detail-tag">${selectedType}</span>
+      </div>
+      <ul class="record-list-inline">
+        ${records.map((record) => `<li>${formatValue(record)}</li>`).join('')}
+      </ul>
+    `;
+    return;
+  }
+
+  if (tool === 'reverse') {
+    const reverse = domainInfo?.reverse || [];
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>Reverse DNS</h3>
+        <span class="detail-tag">PTR</span>
+      </div>
+      ${reverse.length ? `<ul class="record-list-inline">${reverse.map((entry) => `<li>${formatValue(entry)}</li>`).join('')}</ul>` : '<div class="empty-state"><strong>No reverse DNS</strong><span>No PTR record was found for this domain.</span></div>'}
+    `;
+    return;
+  }
+
+  if (tool === 'mx') {
+    const mxRows = parseMxRecords(domainInfo?.mx || []);
+    if (!mxRows.length) {
+      renderEmptyState('No mail records', 'No MX records were returned for this domain.');
+      return;
+    }
+
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>Mail exchange records</h3>
+        <span class="detail-tag">MX</span>
+      </div>
+      <table class="detail-table">
+        <thead>
+          <tr><th>Priority</th><th>Exchange</th></tr>
+        </thead>
+        <tbody>
+          ${mxRows.map((row) => `<tr><td>${row.priority}</td><td>${formatValue(row.exchange)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+    return;
+  }
+
+  if (tool === 'ns') {
+    const nsRecords = domainInfo?.ns || [];
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>Nameserver records</h3>
+        <span class="detail-tag">NS</span>
+      </div>
+      ${nsRecords.length ? `<ul class="record-list-inline">${nsRecords.map((entry) => `<li>${formatValue(entry)}</li>`).join('')}</ul>` : '<div class="empty-state"><strong>No nameservers</strong><span>No NS records were returned.</span></div>'}
+    `;
+    return;
+  }
+
+  if (tool === 'dmarc') {
+    const dmarcRows = parseDmarcPolicies(domainInfo?.dmarc || []);
+    if (!dmarcRows.length) {
+      renderEmptyState('No DMARC policy', 'No DMARC record is published for this domain.');
+      return;
+    }
+
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>DMARC policy</h3>
+        <span class="detail-tag">DMARC</span>
+      </div>
+      ${dmarcRows.map((row) => {
+        const policyEntries = Object.entries(row.policy || {}).map(([key, value]) => `<tr><th>${key.toUpperCase()}</th><td>${formatValue(value)}</td></tr>`).join('');
+        return `
+          <div class="detail-card">
+            <p><strong>Raw record:</strong> ${formatValue(row.raw)}</p>
+            <table class="detail-table"><tbody>${policyEntries || '<tr><td colspan="2">No policy details available</td></tr>'}</tbody></table>
+          </div>
+        `;
+      }).join('')}
+    `;
+    return;
+  }
+
+  if (tool === 'health') {
+    const checks = domainInfo?.health || [];
+    if (!checks.length) {
+      renderEmptyState('No health data', 'No connection checks were returned for this domain.');
+      return;
+    }
+
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>Reachability checks</h3>
+        <span class="detail-tag">HTTP</span>
+      </div>
+      <table class="detail-table">
+        <thead>
+          <tr><th>URL</th><th>Status</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          ${checks.map((item) => `<tr><td>${item.url}</td><td>${item.status}</td><td>${item.ok ? 'Reachable' : 'Unavailable'}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+    return;
+  }
+
+  if (tool === 'report') {
+    const rows = getFullReportRows(state.summary);
+    detailPanel.innerHTML = `
+      <div class="detail-header-row">
+        <h3>Full diagnostics report</h3>
+        <span class="detail-tag">REPORT</span>
+      </div>
+      <div class="detail-card">
+        <div class="report-grid report-grid-compact" role="table" aria-label="Diagnostic report details">
+          ${rows.map(([label, value]) => `
+            <div class="report-row" role="row">
+              <div class="report-label" role="rowheader">${label}</div>
+              <div class="report-value" role="cell">${formatValue(value)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  renderEmptyState('No data', 'Select a DNS tool to inspect details.');
+}
+
+async function fetchSummary(domain) {
+  const url = `/api/summary?domain=${encodeURIComponent(normalizeDomain(domain))}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch DNS summary');
+  }
+  return response.json();
+}
+
+async function fetchLookup(domain, type) {
+  const url = `/api/lookup?domain=${encodeURIComponent(normalizeDomain(domain))}&type=${encodeURIComponent(type)}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch DNS records');
+  }
+  return response.json();
+}
+
+function setActiveTool(tool) {
+  state.activeTool = tool;
+  toolButtons.forEach((button) => {
+    const active = button.dataset.toolTab === tool;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+
+  if (state.summary && state.lookup) {
+    renderToolDetails();
+  }
+}
+
+async function updateLookup() {
+  const domain = normalizeDomain(domainInput.value);
+  const selectedType = recordType.value;
+
+  statusBanner.textContent = 'Checking DNS data...';
+  statusBanner.className = 'status-banner info';
+  renderSkeletonState();
+
+  try {
+    const [summary, lookup] = await Promise.all([
+      fetchSummary(domain),
+      fetchLookup(domain, selectedType)
+    ]);
+
+    state.summary = summary;
+    state.lookup = lookup;
+    state.fetchError = null;
+
+    applySummary(summary);
+    document.getElementById('recordTypeLabel').textContent = labelMap[selectedType] || selectedType;
+    document.getElementById('recordDomain').textContent = summary.domainInfo.domain || domain;
+
+    if (lookup.records && lookup.records.length) {
+      setStatus(`Found ${lookup.records.length} ${selectedType} record(s) for ${summary.domainInfo.domain || domain}.`, 'success');
+    } else {
+      setStatus(`No ${selectedType} record found for ${summary.domainInfo.domain || domain}.`, 'warning');
+    }
+
+    renderRecordList(lookup.records || [], `No ${selectedType} record found.`);
+    renderToolDetails();
+  } catch (error) {
+    state.fetchError = error.message;
+    setStatus(`Lookup failed: ${error.message}`, 'error');
+    renderRecordList([`Lookup failed: ${error.message}`]);
+    renderErrorState(error.message);
+  }
+}
+
+searchBtn.addEventListener('click', updateLookup);
+recordType.addEventListener('change', () => {
+  if (state.summary) {
+    renderToolDetails();
+  }
+  updateLookup();
+});
+domainInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') updateLookup();
+});
+currentDomainBtn.addEventListener('click', () => {
+  const current = window.location.hostname || 'www.example.com';
+  domainInput.value = current;
+  updateLookup();
+});
+
+toolButtons.forEach((button) => {
+  button.addEventListener('click', () => setActiveTool(button.dataset.toolTab));
+  button.setAttribute('aria-pressed', button.dataset.toolTab === 'overview' ? 'true' : 'false');
+});
+
+setStatus('Checking DNS data...', 'info');
+renderSkeletonState();
+updateLookup();
