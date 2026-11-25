@@ -341,6 +341,20 @@ Open your browser and navigate to:
 
 > 💡 If port `3001` is already in use, the server automatically attempts to use the next available port.
 
+### Running Tests
+
+Validate domain input handling and core validation logic:
+
+```bash
+npm test
+```
+
+This runs a comprehensive test suite covering:
+- Valid and invalid domain formats
+- Special character handling
+- DNS label validation
+- Edge cases and error conditions
+
 ### 🔧 Custom Port Configuration
 
 DNS Tool supports custom port configuration through the `PORT` environment variable.
@@ -517,6 +531,66 @@ DNS Tool uses public services to enrich network and geolocation information.
 | [ipapi](https://ipapi.co/) | IP geolocation metadata |
 
 > **Note:** These services are external dependencies. Their availability and accuracy depend on the respective providers.
+
+---
+
+## 🗺️ Recent Improvements (Latest Release)
+
+### ✨ MXToolbox-Style Command Selector
+
+A new **Quick Commands** dropdown selector has been added, inspired by [MXToolbox.com](https://mxtoolbox.com/). This feature makes DNS record lookups more intuitive and user-friendly.
+
+**Key Features:**
+- **Organized dropdown menu** — 13 record types organized by category (Most Common, DNS Records, Email & Security)
+- **Auto-trigger lookups** — Selecting a command automatically runs the lookup for the current domain
+- **Descriptive tooltips** — Each command shows what it does and why you'd use it
+- **Visual feedback** — Selected command displays in info box with helpful explanation
+- **Supported record types** — A, AAAA, MX, TXT, CNAME, NS, PTR, SOA, SRV, CAA, SPF, DKIM, DMARC
+
+**Example Usage:**
+1. Enter domain: `example.com`
+2. Select from dropdown: "SPF Record Lookup"
+3. Tool automatically runs lookup and displays SPF records
+4. Info box shows: "**SPF:** Sender Policy Framework - email sender authentication"
+
+📖 See [COMMAND_SELECTOR.md](./COMMAND_SELECTOR.md) for complete documentation.
+
+### ✨ Frontend Polish & UX Enhancements
+
+- **Improved detail panels layout** — Better spacing, padding, and hierarchy for all diagnostic detail views
+- **Enhanced report readability** — Larger column widths, improved line-height, and better text wrapping in full report
+- **Better empty states** — Clear, centered messaging when no data is available with contextual hints
+- **TXT record formatting** — Records now display one-per-line for improved readability
+- **MX record sorting** — Mail exchangers are now automatically sorted by priority
+- **Improved metric boxes** — Better visual hierarchy with enhanced typography and spacing
+- **Record list improvements** — Monospace font for DNS records with better visual distinction
+- **Health check colors** — Status indicators now use color coding for quick visual scanning
+
+### 🔒 Backend Hardening
+
+- **Enhanced domain validation** — Improved error messages and additional validation rules:
+  - Domain must have at least two labels (e.g., `example.com`)
+  - IP addresses are rejected with helpful guidance to use PTR lookups instead
+  - Better error messages for each validation failure
+- **Better error responses** — API errors now include structured error codes and context-specific messages
+- **Improved error handling** — Distinction between validation errors (400) and runtime errors (500)
+
+### 🧪 Quality & Testing
+
+- **Domain validation test suite** — 19 comprehensive tests covering:
+  - Valid domains with various formats
+  - Invalid domains with special characters, formatting issues, and edge cases
+  - IP address rejection
+  - Protocol and trailing slash normalization
+  - Case sensitivity handling
+- **ESLint configuration** — Code style and quality checking rules
+- **Test script in npm** — Run tests with `npm test`
+
+### 📚 Code Quality
+
+- **XSS prevention** — Improved HTML escaping in error and empty state messages
+- **Better variable naming** — Clearer error messages and status labels
+- **Responsive improvements** — Better mobile layout handling for tables and detail panels
 
 ---
 

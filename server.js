@@ -30,20 +30,28 @@ function validateDomain(value) {
   }
 
   if (cleaned.includes('..') || cleaned.startsWith('.') || cleaned.endsWith('.')) {
-    throw new Error('Domain contains invalid formatting.');
+    throw new Error('Domain contains invalid formatting (double dots or leading/trailing dots).');
   }
 
-  if (/\s/.test(cleaned) || /[\/\\:@?&=#%]/.test(cleaned)) {
+  if (/\s/.test(cleaned) || /[\/\\:@?&=#%\[\]]/.test(cleaned)) {
     throw new Error('Domain contains unsupported characters.');
   }
 
   const labels = cleaned.split('.');
+  if (labels.length < 2 && cleaned !== 'localhost') {
+    throw new Error('Domain must have at least two labels (e.g., example.com).');
+  }
+
   if (labels.some((label) => label.length === 0 || label.length > 63 || label.startsWith('-') || label.endsWith('-'))) {
     throw new Error('Each DNS label must be 1 to 63 characters and cannot start or end with a hyphen.');
   }
 
   if (!/^[a-z0-9.-]+$/i.test(cleaned)) {
     throw new Error('Only letters, numbers, dots, and hyphens are allowed in the domain.');
+  }
+
+  if (/^(\d+\.){3}\d+$/.test(cleaned)) {
+    throw new Error('IP addresses should be looked up with PTR records, not as domain names.');
   }
 
   return cleaned;
@@ -700,8 +708,10 @@ function createServer() {
         const summary = await getPublicGeoSummary(safeDomain);
         sendJson(response, 200, summary);
       } catch (error) {
-        const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;
-        sendJson(response, code, { error: error.message, status: 'error' });
+        const isValidationError = error && error.message && /Domain|label|characters|invalid formatting/i.test(error.message);
+        const code = isValidationError ? 400 : 500;
+        const message = isValidationError ? error.message : 'Internal server error. Please try again later.';
+        sendJson(response, code, { error: message, status: 'error', code: isValidationError ? 'INVALID_DOMAIN' : 'SERVER_ERROR' });
       }
       return;
     }
@@ -714,8 +724,10 @@ function createServer() {
         const result = await handleLookup(safeDomain, type);
         sendJson(response, 200, result);
       } catch (error) {
-        const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;
-        sendJson(response, code, { error: error.message, status: 'error' });
+        const isValidationError = error && error.message && /Domain|label|characters|invalid formatting/i.test(error.message);
+        const code = isValidationError ? 400 : 500;
+        const message = isValidationError ? error.message : 'DNS lookup failed. Please verify the domain and try again.';
+        sendJson(response, code, { error: message, status: 'error', code: isValidationError ? 'INVALID_DOMAIN' : 'LOOKUP_FAILED' });
       }
       return;
     }
@@ -727,8 +739,10 @@ function createServer() {
         const summary = await getDomainInfo(safeDomain);
         sendJson(response, 200, summary);
       } catch (error) {
-        const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;
-        sendJson(response, code, { error: error.message, status: 'error' });
+        const isValidationError = error && error.message && /Domain|label|characters|invalid formatting/i.test(error.message);
+        const code = isValidationError ? 400 : 500;
+        const message = isValidationError ? error.message : 'Health check failed. Please try again later.';
+        sendJson(response, code, { error: message, status: 'error', code: isValidationError ? 'INVALID_DOMAIN' : 'HEALTH_CHECK_FAILED' });
       }
       return;
     }
@@ -740,8 +754,10 @@ function createServer() {
         const result = await getTlsDiagnostics(safeDomain);
         sendJson(response, 200, result);
       } catch (error) {
-        const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;
-        sendJson(response, code, { error: error.message, status: 'error' });
+        const isValidationError = error && error.message && /Domain|label|characters|invalid formatting/i.test(error.message);
+        const code = isValidationError ? 400 : 500;
+        const message = isValidationError ? error.message : 'TLS diagnostics failed. The domain may not support HTTPS.';
+        sendJson(response, code, { error: message, status: 'error', code: isValidationError ? 'INVALID_DOMAIN' : 'TLS_FAILED' });
       }
       return;
     }
@@ -753,8 +769,10 @@ function createServer() {
         const result = await getAdvancedDnsAnalysis(safeDomain);
         sendJson(response, 200, result);
       } catch (error) {
-        const code = error && error.message && /Domain/.test(error.message) ? 400 : 500;
-        sendJson(response, code, { error: error.message, status: 'error' });
+        const isValidationError = error && error.message && /Domain|label|characters|invalid formatting/i.test(error.message);
+        const code = isValidationError ? 400 : 500;
+        const message = isValidationError ? error.message : 'Advanced analysis failed. Please try again later.';
+        sendJson(response, code, { error: message, status: 'error', code: isValidationError ? 'INVALID_DOMAIN' : 'ANALYSIS_FAILED' });
       }
       return;
     }

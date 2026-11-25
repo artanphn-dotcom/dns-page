@@ -1,5 +1,6 @@
 const domainInput = document.getElementById('domainInput');
-const recordType = document.getElementById('recordType');
+const commandSelector = document.getElementById('commandSelector');
+const commandInfo = document.getElementById('commandInfo');
 const searchBtn = document.getElementById('searchBtn');
 const currentDomainBtn = document.getElementById('currentDomainBtn');
 const statusBanner = document.getElementById('statusBanner');
@@ -7,20 +8,44 @@ const healthBadge = document.getElementById('healthBadge');
 const healthSummaryText = document.getElementById('healthSummaryText');
 const toolButtons = Array.from(document.querySelectorAll('[data-tool-tab]'));
 
+const commandDescriptions = {
+  'A': 'IPv4 address records - standard DNS host addressing',
+  'AAAA': 'IPv6 address records - modern internet protocol addresses',
+  'MX': 'Mail exchange records - directs email routing',
+  'TXT': 'Text records - verification, policies, and configurations',
+  'CNAME': 'Canonical name records - domain aliases',
+  'NS': 'Nameserver records - authoritative DNS servers',
+  'PTR': 'Pointer records - reverse DNS lookups',
+  'SOA': 'Start of Authority - zone administration details',
+  'SRV': 'Service records - location of specific services',
+  'CAA': 'Certificate Authority Authorization - certificate issuance control',
+  'SPF': 'Sender Policy Framework - email sender authentication',
+  'DKIM': 'DomainKeys Identified Mail - email digital signatures',
+  'DMARC': 'Domain-based Message Authentication - email authentication policy'
+};
+
 const labelMap = {
   A: 'A',
   AAAA: 'AAAA',
   NS: 'NS',
   MX: 'MX',
   TXT: 'TXT',
-  PTR: 'PTR'
+  PTR: 'PTR',
+  CNAME: 'CNAME',
+  SOA: 'SOA',
+  SRV: 'SRV',
+  CAA: 'CAA',
+  SPF: 'SPF',
+  DKIM: 'DKIM',
+  DMARC: 'DMARC'
 };
 
 const state = {
   activeTool: 'overview',
   summary: null,
   lookup: null,
-  fetchError: null
+  fetchError: null,
+  selectedCommand: null
 };
 
 function fillField(id, value) {
@@ -41,10 +66,11 @@ function normalizeDomain(value) {
 function formatValue(value, fallback = 'N/A') {
   if (value === undefined || value === null || value === '') return fallback;
   if (Array.isArray(value)) {
-    return value.length ? value.map((item) => formatValue(item, fallback)).join('<br>') : fallback;
+    return value.length ? value.map((item) => formatValue(item, fallback)).join('<br/>') : fallback;
   }
   if (typeof value === 'object') return JSON.stringify(value);
-  return String(value).replace(/\n/g, '<br>');
+  const str = String(value);
+  return str.replace(/\n/g, '<br/>').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function formatCheckLabel(name) {
@@ -75,32 +101,34 @@ function formatCheckLabel(name) {
 function parseMxRecords(records) {
   if (!Array.isArray(records)) return [];
 
-  return records.map((record) => {
-    if (typeof record === 'string') {
-      try {
-        const parsed = JSON.parse(record);
-        if (parsed && typeof parsed === 'object' && parsed.exchange) {
-          return { priority: parsed.priority ?? 0, exchange: parsed.exchange, value: parsed.exchange };
+  return records
+    .map((record) => {
+      if (typeof record === 'string') {
+        try {
+          const parsed = JSON.parse(record);
+          if (parsed && typeof parsed === 'object' && parsed.exchange) {
+            return { priority: parsed.priority ?? 0, exchange: parsed.exchange, value: parsed.exchange };
+          }
+        } catch (error) {
+          // fall through to string-based parsing
         }
-      } catch (error) {
-        // fall through to string-based parsing
+
+        const match = record.match(/\(?\s*(\d+)\s*\)?\s*(.*)/);
+        if (match) {
+          return { priority: Number(match[1]) || 0, exchange: match[2] || 'N/A', value: match[2] || 'N/A' };
+        }
+
+        return { priority: 0, exchange: record, value: record };
       }
 
-      const match = record.match(/\(?\s*(\d+)\s*\)?\s*(.*)/);
-      if (match) {
-        return { priority: Number(match[1]) || 0, exchange: match[2] || 'N/A', value: match[2] || 'N/A' };
+      if (record && typeof record === 'object') {
+        const exchange = record.exchange || record.host || 'N/A';
+        return { priority: Number(record.priority) || 0, exchange, value: exchange };
       }
 
-      return { priority: 0, exchange: record, value: record };
-    }
-
-    if (record && typeof record === 'object') {
-      const exchange = record.exchange || record.host || 'N/A';
-      return { priority: Number(record.priority) || 0, exchange, value: exchange };
-    }
-
-    return { priority: 0, exchange: formatValue(record), value: formatValue(record) };
-  });
+      return { priority: 0, exchange: formatValue(record), value: formatValue(record) };
+    })
+    .sort((a, b) => a.priority - b.priority);
 }
 
 function parseDmarcPolicies(value) {
@@ -149,8 +177,8 @@ function renderEmptyState(title, message) {
 
   detailPanel.innerHTML = `
     <div class="empty-state">
-      <strong>${title}</strong>
-      <span>${message}</span>
+      <strong>${title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</strong>
+      <span>${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
     </div>
   `;
 }
@@ -161,8 +189,8 @@ function renderErrorState(message) {
 
   detailPanel.innerHTML = `
     <div class="error-state">
-      <strong>Lookup issue</strong>
-      <span>${message}</span>
+      <strong>Lookup error</strong>
+      <span>${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
     </div>
   `;
 }
@@ -235,7 +263,8 @@ function applySummary(summary) {
   if (recordDomain) recordDomain.textContent = domainInfo.domain || normalizeDomain(domainInput.value);
 
   const typeLabel = document.getElementById('recordTypeLabel');
-  if (typeLabel) typeLabel.textContent = labelMap[recordType.value] || recordType.value;
+  const displayType = state.selectedCommand || 'A';
+  if (typeLabel) typeLabel.textContent = labelMap[displayType] || displayType;
 
   updateHealthStatus(summary);
   renderFullReportTable(summary);
@@ -313,7 +342,7 @@ function renderToolDetails() {
   }
 
   const { domainInfo, summary: overview } = state.summary;
-  const selectedType = recordType.value;
+  const selectedType = state.selectedCommand || 'A';
   const tool = state.activeTool;
 
   if (tool === 'overview') {
@@ -350,13 +379,13 @@ function renderToolDetails() {
   if (tool === 'dns') {
     const records = state.lookup?.records || [];
     if (!records.length) {
-      renderEmptyState('No DNS records found', `No ${selectedType} records are available for ${domainInfo?.domain || 'this domain'}.`);
+      renderEmptyState('No records found', `${selectedType} records are not published for ${domainInfo?.domain || 'this domain'}. The domain may not use this record type.`);
       return;
     }
 
     detailPanel.innerHTML = `
       <div class="detail-header-row">
-        <h3>${selectedType} record details</h3>
+        <h3>${selectedType} records</h3>
         <span class="detail-tag">${selectedType}</span>
       </div>
       <ul class="record-list-inline">
@@ -370,10 +399,10 @@ function renderToolDetails() {
     const reverse = domainInfo?.reverse || [];
     detailPanel.innerHTML = `
       <div class="detail-header-row">
-        <h3>Reverse DNS</h3>
+        <h3>Reverse DNS lookup</h3>
         <span class="detail-tag">PTR</span>
       </div>
-      ${reverse.length ? `<ul class="record-list-inline">${reverse.map((entry) => `<li>${formatValue(entry)}</li>`).join('')}</ul>` : '<div class="empty-state"><strong>No reverse DNS</strong><span>No PTR record was found for this domain.</span></div>'}
+      ${reverse.length ? `<ul class="record-list-inline">${reverse.map((entry) => `<li>${formatValue(entry)}</li>`).join('')}</ul>` : '<div class="empty-state"><strong>No reverse DNS</strong><span>No PTR record exists for the primary IP address. This is common for many domains.</span></div>'}
     `;
     return;
   }
@@ -381,21 +410,21 @@ function renderToolDetails() {
   if (tool === 'mx') {
     const mxRows = parseMxRecords(domainInfo?.mx || []);
     if (!mxRows.length) {
-      renderEmptyState('No mail records', 'No MX records were returned for this domain.');
+      renderEmptyState('No mail records', 'No MX records are configured for this domain. Email delivery may not be available.');
       return;
     }
 
     detailPanel.innerHTML = `
       <div class="detail-header-row">
-        <h3>Mail exchange records</h3>
+        <h3>Mail exchangers</h3>
         <span class="detail-tag">MX</span>
       </div>
       <table class="detail-table">
         <thead>
-          <tr><th>Priority</th><th>Exchange</th></tr>
+          <tr><th>Priority</th><th>Exchange server</th></tr>
         </thead>
         <tbody>
-          ${mxRows.map((row) => `<tr><td>${row.priority}</td><td>${formatValue(row.exchange)}</td></tr>`).join('')}
+          ${mxRows.map((row) => `<tr><td style="font-weight:600;">${row.priority}</td><td>${formatValue(row.exchange)}</td></tr>`).join('')}
         </tbody>
       </table>
     `;
@@ -406,10 +435,10 @@ function renderToolDetails() {
     const nsRecords = domainInfo?.ns || [];
     detailPanel.innerHTML = `
       <div class="detail-header-row">
-        <h3>Nameserver records</h3>
+        <h3>Authoritative nameservers</h3>
         <span class="detail-tag">NS</span>
       </div>
-      ${nsRecords.length ? `<ul class="record-list-inline">${nsRecords.map((entry) => `<li>${formatValue(entry)}</li>`).join('')}</ul>` : '<div class="empty-state"><strong>No nameservers</strong><span>No NS records were returned.</span></div>'}
+      ${nsRecords.length ? `<ul class="record-list-inline">${nsRecords.map((entry) => `<li>${formatValue(entry)}</li>`).join('')}</ul>` : '<div class="empty-state"><strong>No nameservers found</strong><span>No NS records are available. The domain may not be properly configured.</span></div>'}
     `;
     return;
   }
@@ -417,7 +446,7 @@ function renderToolDetails() {
   if (tool === 'dmarc') {
     const dmarcRows = parseDmarcPolicies(domainInfo?.dmarc || []);
     if (!dmarcRows.length) {
-      renderEmptyState('No DMARC policy', 'No DMARC record is published for this domain.');
+      renderEmptyState('No DMARC policy', 'No DMARC record is published for this domain. DMARC helps prevent email spoofing.');
       return;
     }
 
@@ -430,8 +459,9 @@ function renderToolDetails() {
         const policyEntries = Object.entries(row.policy || {}).map(([key, value]) => `<tr><th>${key.toUpperCase()}</th><td>${formatValue(value)}</td></tr>`).join('');
         return `
           <div class="detail-card">
-            <p><strong>Raw record:</strong> ${formatValue(row.raw)}</p>
-            <table class="detail-table"><tbody>${policyEntries || '<tr><td colspan="2">No policy details available</td></tr>'}</tbody></table>
+            <strong style="display:block; margin-bottom:12px; font-size:0.9rem; color:var(--muted);">Full DMARC record:</strong>
+            <div style="padding:12px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid var(--border); font-family:monospace; font-size:0.85rem; word-break:break-all; line-height:1.6;">${formatValue(row.raw)}</div>
+            ${policyEntries ? `<div style="margin-top:16px;"><strong style="display:block; margin-bottom:12px; font-size:0.9rem; color:var(--muted);">Policy breakdown:</strong><table class="detail-table"><tbody>${policyEntries}</tbody></table></div>` : ''}
           </div>
         `;
       }).join('')}
@@ -442,21 +472,25 @@ function renderToolDetails() {
   if (tool === 'health') {
     const checks = domainInfo?.health || [];
     if (!checks.length) {
-      renderEmptyState('No health data', 'No connection checks were returned for this domain.');
+      renderEmptyState('No health data', 'No reachability checks were performed. The domain may not be resolvable.');
       return;
     }
 
     detailPanel.innerHTML = `
       <div class="detail-header-row">
-        <h3>Reachability checks</h3>
+        <h3>Website reachability</h3>
         <span class="detail-tag">HTTP</span>
       </div>
       <table class="detail-table">
         <thead>
-          <tr><th>URL</th><th>Status</th><th>Result</th></tr>
+          <tr><th>Protocol</th><th>Status</th><th>Result</th></tr>
         </thead>
         <tbody>
-          ${checks.map((item) => `<tr><td>${item.url}</td><td>${item.status}</td><td>${item.ok ? 'Reachable' : 'Unavailable'}</td></tr>`).join('')}
+          ${checks.map((item) => {
+            const statusCode = item.status === 'ERR' ? '—' : item.status;
+            const statusColor = item.ok ? 'var(--success)' : 'var(--warning)';
+            return `<tr><td style="font-weight:600;">${item.scheme.toUpperCase()}</td><td style="color:${statusColor};">${statusCode}</td><td>${item.ok ? 'Reachable' : 'Unavailable'}</td></tr>`;
+          }).join('')}
         </tbody>
       </table>
     `;
@@ -611,7 +645,7 @@ function setActiveTool(tool) {
 
 async function updateLookup() {
   const domain = normalizeDomain(domainInput.value);
-  const selectedType = recordType.value;
+  const selectedType = state.selectedCommand || 'A';
 
   statusBanner.textContent = 'Checking DNS data...';
   statusBanner.className = 'status-banner info';
@@ -648,11 +682,24 @@ async function updateLookup() {
 }
 
 searchBtn.addEventListener('click', updateLookup);
-recordType.addEventListener('change', () => {
-  if (state.summary) {
-    renderToolDetails();
+commandSelector.addEventListener('change', (event) => {
+  const command = event.target.value;
+  if (!command) {
+    commandInfo.classList.remove('active');
+    commandInfo.innerHTML = '<span>Select a command to begin</span>';
+    state.selectedCommand = null;
+    return;
   }
-  updateLookup();
+  
+  state.selectedCommand = command;
+  const description = commandDescriptions[command] || 'DNS record lookup';
+  commandInfo.classList.add('active');
+  commandInfo.innerHTML = `<strong>${command}:</strong> ${description}`;
+  
+  // Auto-trigger lookup when a command is selected
+  if (domainInput.value && domainInput.value !== 'www.example.com') {
+    updateLookup();
+  }
 });
 domainInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') updateLookup();

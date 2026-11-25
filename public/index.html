@@ -28,14 +28,6 @@
               <label for="domainInput">Domain</label>
               <div class="field-row">
                 <input id="domainInput" type="text" value="www.example.com" placeholder="example.com" aria-label="Domain to analyze" />
-                <select id="recordType" aria-label="DNS record type">
-                  <option value="A">A</option>
-                  <option value="AAAA">AAAA</option>
-                  <option value="NS">NS</option>
-                  <option value="MX">MX</option>
-                  <option value="TXT">TXT</option>
-                  <option value="PTR">PTR</option>
-                </select>
               </div>
               <div class="button-row">
                 <button id="searchBtn" type="button">Search</button>
@@ -52,6 +44,54 @@
               <div id="healthBadge" class="health-pill healthy">Healthy</div>
               <p id="healthSummaryText">Checking current domain status...</p>
             </aside>
+          </div>
+        </section>
+
+        <section class="panel commands-panel">
+          <div class="section-header">
+            <h2>Quick Commands</h2>
+            <p class="section-description">Select a DNS record type to lookup (like MXToolbox)</p>
+          </div>
+          <div class="commands-container">
+            <select id="commandSelector" aria-label="Select DNS record type to lookup" class="command-dropdown">
+              <option value="">-- Choose a command --</option>
+              <optgroup label="Most Common">
+                <option value="A">A Record Lookup</option>
+                <option value="AAAA">AAAA Record Lookup (IPv6)</option>
+                <option value="MX">MX Record Lookup (Email)</option>
+                <option value="TXT">TXT Record Lookup</option>
+              </optgroup>
+              <optgroup label="DNS Records">
+                <option value="CNAME">CNAME Lookup (Canonical Names)</option>
+                <option value="NS">NS Lookup (Nameservers)</option>
+                <option value="PTR">PTR Lookup (Reverse DNS)</option>
+                <option value="SOA">SOA Lookup (Start of Authority)</option>
+                <option value="SRV">SRV Record Lookup (Service)</option>
+                <option value="CAA">CAA Record Lookup (Certificate)</option>
+              </optgroup>
+              <optgroup label="Email & Security">
+                <option value="SPF">SPF Record Lookup</option>
+                <option value="DKIM">DKIM Record Lookup</option>
+                <option value="DMARC">DMARC Record Lookup</option>
+              </optgroup>
+            </select>
+            <div class="command-info" id="commandInfo">
+              <span>Select a command to begin</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel lookup-panel">
+          <div class="section-header">
+            <h2>Quick Lookup Results</h2>
+          </div>
+          <div class="record-box">
+            <div class="detail-header">
+              <span class="record-type" id="recordTypeLabel">A</span>
+              <span class="record-domain" id="recordDomain">www.example.com</span>
+            </div>
+            <div id="statusBanner" class="status-banner info">Checking DNS data...</div>
+            <ul id="recordList" class="record-list"></ul>
           </div>
         </section>
 
@@ -164,20 +204,6 @@
               <div><span>Country</span><strong id="geoCountry">N/A</strong></div>
               <div><span>Latitude</span><strong id="geoLat">N/A</strong></div>
               <div><span>Longitude</span><strong id="geoLon">N/A</strong></div>
-            </div>
-          </section>
-
-          <section class="panel lookup-panel">
-            <div class="section-header">
-              <h2>DNS Lookup</h2>
-            </div>
-            <div class="record-box">
-              <div class="detail-header">
-                <span class="record-type" id="recordTypeLabel">A</span>
-                <span class="record-domain" id="recordDomain">www.example.com</span>
-              </div>
-              <div id="statusBanner" class="status-banner info">Checking DNS data...</div>
-              <ul id="recordList" class="record-list"></ul>
             </div>
           </section>
         </div>

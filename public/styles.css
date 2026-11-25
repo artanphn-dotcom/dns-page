@@ -125,7 +125,8 @@ h1 {
 .geo-panel,
 .lookup-panel,
 .detail-panel,
-.full-report-panel {
+.full-report-panel,
+.commands-panel {
   grid-column: span 12;
 }
 
@@ -375,6 +376,10 @@ button.secondary {
   width: 100%;
 }
 
+#detailPanel {
+  padding-top: 4px;
+}
+
 .detail-pane-layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -482,11 +487,16 @@ button.secondary {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
 }
 
 .detail-header-row h3 {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
 }
 
 .detail-tag {
@@ -522,66 +532,80 @@ button.secondary {
 .tls-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .detail-card {
   margin-top: 0;
-  padding: 16px;
+  margin-bottom: 16px;
+  padding: 18px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.02);
 }
 
+.detail-card:last-child {
+  margin-bottom: 0;
+}
+
 .detail-card h3 {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  margin-top: 0;
   font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .metric-box {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 16px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.015);
 }
 
 .metric-box span {
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
+  font-size: 0.65rem;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--muted);
+  font-weight: 600;
 }
 
 .metric-box strong {
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-size: 1rem;
+  color: var(--text);
 }
 
 .pill-list,
 .record-list-inline {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 10px 0 0 0;
 }
 
 .pill-list li,
 .record-list-inline li {
-  padding: 8px 10px;
-  border-radius: 999px;
-  background: rgba(91, 179, 255, 0.08);
-  border: 1px solid rgba(91, 179, 255, 0.2);
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  background: rgba(91, 179, 255, 0.07);
+  border: 1px solid rgba(91, 179, 255, 0.18);
   color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .record-list-inline li {
-  border-radius: 10px;
-  font-size: 0.92rem;
+  font-family: "Courier New", monospace;
 }
 
 .detail-table {
@@ -627,18 +651,28 @@ button.secondary {
 .empty-state,
 .error-state,
 .loading-state {
-  padding: 24px 18px;
-  border: 1px dashed var(--border);
+  padding: 32px 24px;
+  border: 1px dashed rgba(160, 177, 208, 0.25);
   border-radius: var(--radius-md);
   color: var(--muted);
-  background: rgba(255,255,255,0.01);
+  background: rgba(91, 179, 255, 0.03);
+  text-align: center;
 }
 
 .empty-state strong,
 .error-state strong {
   display: block;
-  margin-bottom: 8px;
-  color: var(--text);
+  margin-bottom: 10px;
+  color: var(--primary-strong);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.empty-state span,
+.error-state span {
+  display: block;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .loading-skeleton {
@@ -796,7 +830,7 @@ button.secondary {
 
 .report-grid {
   display: grid;
-  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
   gap: 0;
   width: 100%;
   min-width: 0;
@@ -807,7 +841,7 @@ button.secondary {
 }
 
 .report-grid-compact {
-  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr);
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
 }
 
 .report-grid .empty-state {
@@ -822,20 +856,20 @@ button.secondary {
 
 .report-label,
 .report-value {
-  padding: 12px 14px;
-  min-height: 52px;
+  padding: 14px 16px;
+  min-height: 56px;
   word-break: break-word;
   overflow-wrap: anywhere;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 .report-label {
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   font-weight: 700;
 }
@@ -955,6 +989,85 @@ button.secondary {
 
 #fullReportTable {
   width: 100%;
+}
+
+.section-description {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.commands-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.command-dropdown {
+  width: 100%;
+  padding: 16px 18px;
+  min-height: 56px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel-alt);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.command-dropdown:hover {
+  border-color: rgba(91, 179, 255, 0.35);
+  background: rgba(16, 27, 40, 0.98);
+}
+
+.command-dropdown:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(91, 179, 255, 0.15);
+}
+
+.command-dropdown option {
+  background: var(--bg-elevated);
+  color: var(--text);
+  padding: 10px;
+}
+
+.command-dropdown optgroup {
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--bg-elevated);
+  padding: 8px 0;
+}
+
+.command-info {
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: rgba(91, 179, 255, 0.08);
+  border: 1px solid rgba(91, 179, 255, 0.2);
+  color: var(--muted);
+  font-size: 0.95rem;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+.command-info.active {
+  background: rgba(91, 179, 255, 0.15);
+  color: var(--text);
+  border-color: rgba(91, 179, 255, 0.4);
+}
+
+.command-info strong {
+  color: var(--primary-strong);
+  font-weight: 600;
+  margin-right: 6px;
+  font-size: 1rem;
 }
 
 @media (max-width: 900px) {
