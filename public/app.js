@@ -681,6 +681,153 @@ async function updateLookup() {
   }
 }
 
+function exportCurrentReport(theme = 'light') {
+  const exportButton = theme === 'dark' ? document.getElementById('exportPdfDarkBtn') : document.getElementById('exportPdfWhiteBtn');
+  if (exportButton) {
+    exportButton.disabled = true;
+    exportButton.textContent = 'Preparing...';
+  }
+
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    if (exportButton) {
+      exportButton.disabled = false;
+      exportButton.textContent = theme === 'dark' ? 'Download Black PDF' : 'Download White PDF';
+    }
+    window.alert('PDF generation library did not load. Please refresh the page and try again.');
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+  const domain = normalizeDomain(domainInput.value || 'example.com');
+  const rows = state.summary ? getFullReportRows(state.summary) : [];
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 42;
+  const headerHeight = 96;
+  const dark = theme === 'dark';
+
+  if (dark) {
+    doc.setFillColor(5, 15, 24);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+    doc.setTextColor(237, 246, 255);
+  } else {
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+    doc.setTextColor(16, 24, 33);
+  }
+
+  const primaryColor = dark ? [125, 211, 252] : [37, 99, 235];
+  const mutedColor = dark ? [191, 219, 254] : [71, 85, 105];
+
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.roundedRect(margin, 28, pageWidth - margin * 2, headerHeight, 12, 12, 'F');
+  doc.setTextColor(dark ? 7 : 255, dark ? 17 : 255, dark ? 27 : 255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DNS Diagnostics Export', margin + 18, 58);
+
+  doc.setFontSize(11);
+  doc.setTextColor(dark ? 226 : 25, dark ? 232 : 25, dark ? 240 : 25);
+  doc.text(`Domain: ${domain}`, margin + 18, 80);
+
+  let y = 140;
+  const summaryItems = rows.slice(0, 6);
+  const columnWidth = (pageWidth - margin * 2 - 12) / 2;
+
+  for (let index = 0; index < summaryItems.length; index += 1) {
+    const [label, value] = summaryItems[index];
+    const column = index % 2;
+    const row = Math.floor(index / 2);
+    const x = margin + (column * (columnWidth + 12));
+    const boxY = y + row * 72;
+
+    doc.setFillColor(dark ? 14 : 248, dark ? 20 : 250, dark ? 33 : 252);
+    doc.roundedRect(x, boxY, columnWidth, 52, 8, 8, 'F');
+    doc.setDrawColor(dark ? 59 : 203, dark ? 130 : 213, dark ? 246 : 255);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(x, boxY, columnWidth, 52, 8, 8, 'S');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(mutedColor[0], mutedColor[1], mutedColor[2]);
+    doc.text(String(label).toUpperCase(), x + 12, boxY + 18);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(dark ? 240 : 17, dark ? 246 : 24, dark ? 255 : 33);
+    const textLines = doc.splitTextToSize(String(value || 'N/A'), columnWidth - 24);
+    doc.text(textLines.slice(0, 3), x + 12, boxY + 34);
+  }
+
+  y = 140 + (Math.ceil(summaryItems.length / 2) * 72) + 20;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(dark ? 240 : 17, dark ? 246 : 24, dark ? 255 : 33);
+  doc.text('Full Report', margin, y);
+  y += 18;
+
+  const bodyWidth = pageWidth - margin * 2;
+  const labelWidth = bodyWidth * 0.34;
+  const valueWidth = bodyWidth * 0.66;
+
+  doc.setDrawColor(dark ? 71 : 203, dark ? 85 : 213, dark ? 105 : 255);
+  doc.setLineWidth(0.75);
+  doc.line(margin, y, pageWidth - margin, y);
+
+  rows.forEach(([label, value], index) => {
+    if (y > pageHeight - 80) {
+      doc.addPage();
+      y = 40;
+      doc.setDrawColor(dark ? 71 : 203, dark ? 85 : 213, dark ? 105 : 255);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 24;
+    }
+
+    const boxStart = y + (index % 2 === 0 ? 0 : 0);
+    const labelText = String(label || 'N/A');
+    const valueText = String(value || 'N/A');
+    const labelLines = doc.splitTextToSize(labelText, labelWidth - 18);
+    const valueLines = doc.splitTextToSize(valueText, valueWidth - 22);
+    const height = Math.max(labelLines.length * 12, valueLines.length * 12, 18) + 16;
+
+    doc.setFillColor(dark ? 9 : 248, dark ? 15 : 250, dark ? 24 : 252);
+    doc.rect(margin, y, labelWidth, height, 'F');
+    doc.setFillColor(dark ? 15 : 255, dark ? 23 : 255, dark ? 35 : 255);
+    doc.rect(margin + labelWidth, y, valueWidth, height, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(dark ? 191 : 71, dark ? 219 : 85, dark ? 254 : 105);
+    doc.text(labelLines, margin + 12, y + 18);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(dark ? 240 : 17, dark ? 246 : 24, dark ? 255 : 33);
+    doc.text(valueLines, margin + labelWidth + 12, y + 18);
+
+    y += height + 2;
+  });
+
+  const cleanDomain = String(domain || 'domain')
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/$/, '')
+    .replace(/[^a-zA-Z0-9.-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'domain';
+
+  const fileName = `dns-report-${cleanDomain}.pdf`;
+  doc.save(fileName);
+
+  if (exportButton) {
+    exportButton.disabled = false;
+    exportButton.textContent = theme === 'dark' ? 'Download Black PDF' : 'Download White PDF';
+  }
+}
+
+document.getElementById('exportPdfWhiteBtn')?.addEventListener('click', () => exportCurrentReport('light'));
+document.getElementById('exportPdfDarkBtn')?.addEventListener('click', () => exportCurrentReport('dark'));
+
 searchBtn.addEventListener('click', updateLookup);
 commandSelector.addEventListener('change', (event) => {
   const command = event.target.value;

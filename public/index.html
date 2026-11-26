@@ -209,9 +209,15 @@
         </div>
 
         <section class="panel full-report-panel">
-          <div class="section-header">
-            <h2>Full Report</h2>
-            <span class="detail-tag-secondary">Report</span>
+          <div class="section-header section-header-actions">
+            <div class="section-title-block">
+              <h2>Full Report</h2>
+              <span class="detail-tag-secondary">Report</span>
+            </div>
+            <div class="section-actions" aria-label="Download report as PDF">
+              <button id="exportPdfWhiteBtn" class="pdf-export pdf-export-white" type="button">Download White PDF</button>
+              <button id="exportPdfDarkBtn" class="pdf-export pdf-export-dark" type="button">Download Black PDF</button>
+            </div>
           </div>
           <div class="report-container">
             <div class="report-grid" id="fullReportTable" role="table" aria-label="Complete domain diagnostics report" aria-live="polite">
@@ -247,6 +253,7 @@
       </main>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="/app.js"></script>
   </body>
 </html>

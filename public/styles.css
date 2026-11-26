@@ -954,6 +954,56 @@ button.secondary {
   padding-bottom: 18px;
 }
 
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.section-title-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pdf-export {
+  min-height: 38px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+}
+
+.pdf-export:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.pdf-export-white {
+  background: linear-gradient(135deg, #ffffff, #edf3fa);
+  color: #101821;
+  border: 1px solid rgba(16, 24, 33, 0.14);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.pdf-export-dark {
+  background: linear-gradient(135deg, #0f172a, #111827);
+  color: #edf6ff;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+}
+
 .full-report-panel .section-header {
   margin-bottom: 8px;
 }
@@ -1068,6 +1118,78 @@ button.secondary {
   font-weight: 600;
   margin-right: 6px;
   font-size: 1rem;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #101821 !important;
+    padding: 0 !important;
+  }
+
+  .page-shell {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .topbar,
+  .hero-panel,
+  .commands-panel,
+  .lookup-panel,
+  .summary-panel,
+  .tools-panel,
+  .detail-panel,
+  .geo-panel,
+  .info-panel,
+  .helper-row,
+  .button-row,
+  .section-actions,
+  .live-pill,
+  .health-card,
+  .tool-card,
+  .status-banner,
+  .detail-tag-secondary,
+  .detail-tag,
+  .health-pill,
+  .command-info {
+    display: none !important;
+  }
+
+  .panel,
+  .full-report-panel {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(15, 23, 42, 0.12) !important;
+    color: #101821 !important;
+    break-inside: avoid;
+  }
+
+  .section-header h2,
+  .report-label,
+  .report-value,
+  .metric-box span,
+  .metric-box strong,
+  .table-shell th,
+  .table-shell td,
+  .detail-table th,
+  .detail-table td {
+    color: #101821 !important;
+  }
+
+  .report-grid {
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.12) !important;
+    grid-template-columns: minmax(180px, 260px) minmax(0, 1fr) !important;
+  }
+
+  .report-label {
+    background: #f8fafc !important;
+    border-right: 1px solid rgba(15, 23, 42, 0.12) !important;
+  }
+
+  .report-value {
+    background: #ffffff !important;
+  }
 }
 
 @media (max-width: 900px) {
