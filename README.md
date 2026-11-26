@@ -1,330 +1,444 @@
-﻿# DNS Tool
+﻿# 🌐 DNS Tool
 
-Professional DNS diagnostics dashboard for quick domain investigations, health checks, and record inspection.
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js 18+">
+  <img src="https://img.shields.io/badge/Frontend-Vanilla%20JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="Vanilla JavaScript">
+  <img src="https://img.shields.io/badge/Protocol-DNS-2563EB?style=for-the-badge&logo=cloudflare&logoColor=white" alt="DNS">
+  <img src="https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge" alt="License">
+</p>
 
-## Overview
+<p align="center">
+  <strong>A Professional DNS Diagnostics & Domain Intelligence Dashboard</strong>
+  <br>
+  Investigate DNS records, monitor domain health, inspect TLS certificates, and generate comprehensive diagnostic reports — all from one lightweight dashboard.
+</p>
 
-DNS Tool is a lightweight Node.js application for monitoring and diagnosing DNS configuration issues. It provides a browser-based dashboard that helps users inspect DNS records, verify domain health, review TLS/SSL status, and generate a concise full report without needing a large monitoring stack or external framework.
+---
 
-The project is intentionally simple and local-first. It combines:
+## 📌 Overview
 
-- a lightweight Node.js backend
-- a vanilla HTML/CSS/JavaScript frontend
-- built-in Node.js DNS and TLS modules
-- quick domain validation and safer outbound handling
-- a compact, MXToolbox-style command workflow for common DNS queries
+**DNS Tool** is a lightweight, local-first Node.js application designed for DNS diagnostics, domain investigations, and network health monitoring.
 
-This project is designed for practical use, fast local setup, and maintainable code without over-engineering.
+It provides a modern browser-based dashboard that allows users to:
 
-## Core Features
+- 🔍 Inspect and analyze DNS records.
+- 🌐 Verify domain availability and connectivity.
+- 🛡️ Review TLS/SSL certificates and security information.
+- 📡 Investigate DNS health and propagation.
+- 📧 Analyze SPF, DKIM, and DMARC configurations.
+- 📊 Generate consolidated diagnostic reports.
+- 📄 Export reports as downloadable PDF documents.
 
-### DNS record lookups
+Built with simplicity, performance, and maintainability in mind, DNS Tool combines a lightweight Node.js backend with a responsive frontend — without requiring a heavy framework or external monitoring stack.
 
-The dashboard supports the following DNS record types:
+## ✨ Core Features
 
-- A
-- AAAA
-- MX
-- TXT
-- CNAME
-- NS
-- PTR
-- SOA
-- SRV
-- CAA
-- SPF
-- DKIM
-- DMARC
+### 🔎 DNS Record Lookup
 
-### Domain monitoring and health checks
+Perform DNS investigations across multiple record types:
 
-- domain validation and normalization
-- HTTP/HTTPS reachability checks
-- DNS health status summary
-- reverse DNS investigation
-- basic propagation and DNSSEC visibility
-- mail security and SPF/DKIM/DMARC review
+| Record Type | Description |
+|---|---|
+| `A` | IPv4 address records |
+| `AAAA` | IPv6 address records |
+| `MX` | Mail exchange records |
+| `TXT` | Text records |
+| `CNAME` | Canonical name records |
+| `NS` | Name server records |
+| `PTR` | Reverse DNS records |
+| `SOA` | Start of Authority records |
+| `SRV` | Service records |
+| `CAA` | Certificate Authority Authorization |
+| `SPF` | Sender Policy Framework |
+| `DKIM` | DomainKeys Identified Mail |
+| `DMARC` | Domain-based Message Authentication |
 
-### Reporting and usability
+### 🌍 Domain Monitoring & Health Checks
 
-- compact quick-command selector inspired by MXToolbox-style workflows
-- immediate record results beneath the command selector
-- readable, one-per-line TXT output
-- cleaner empty states for missing data
-- full report section with consolidated findings
-- PDF export buttons for white and dark layouts
+- Domain validation and normalization.
+- HTTP/HTTPS reachability checks.
+- DNS health status overview.
+- Reverse DNS investigation.
+- Basic DNS propagation visibility.
+- DNSSEC visibility.
+- Email authentication and security analysis.
+- Domain configuration diagnostics.
 
-### Network and TLS context
+### 📊 Reporting & Dashboard
 
-- public IP and IPv6 detection
-- local interface awareness
-- geolocation display for IPs
-- HTTPS/TLS certificate diagnostics
-- certificate issuer, validity, and hostname checks
+- MXToolbox-inspired Quick Commands workflow.
+- Immediate DNS lookup results.
+- Consolidated diagnostic summaries.
+- Readable, one-per-line TXT output.
+- Improved empty states and error messages.
+- Full Report section with consolidated findings.
+- PDF export with light and dark themes.
 
-## Project Structure
+### 🔐 Network & TLS Diagnostics
+
+- Public IPv4 and IPv6 detection.
+- Local network interface awareness.
+- IP geolocation information.
+- ISP and network metadata.
+- HTTPS/TLS certificate diagnostics.
+- Certificate issuer information.
+- Certificate validity checks.
+- Hostname verification.
+
+## 🏗️ Project Structure
 
 ```text
 DNS Tool/
+│
 ├── public/
 │   ├── app.js
 │   ├── index.html
 │   └── styles.css
+│
 ├── server.js
 ├── test.js
 ├── package.json
+│
 ├── README.md
+├── README1.md
 ├── QUICK_START.md
 ├── IMPROVEMENTS_LOG.md
 ├── LATEST_CHANGES.md
 ├── VERIFICATION_CHECKLIST.md
 ├── FULLWIDTH_PANEL_FIX.md
 ├── SESSION_SUMMARY.md
+│
 └── .gitignore
 ```
 
-## Architecture
+## ⚙️ Architecture
 
 ### Backend
 
-The backend is powered by Node.js and uses built-in modules for:
+Powered by **Node.js**, the backend uses built-in modules for:
 
-- HTTP server and static file serving
-- DNS lookups
-- TLS diagnostics
-- network and IP metadata gathering
-- request validation and rate limiting
+- HTTP server and static file serving.
+- DNS record resolution.
+- TLS/SSL diagnostics.
+- Network and IP metadata collection.
+- Request validation and rate limiting.
+- Controlled error handling.
 
 ### Frontend
 
-The frontend uses:
+The dashboard uses:
 
 - HTML5
 - CSS3
-- vanilla JavaScript
-- fetch-based API calls
-- responsive dashboard panels and grids
+- Vanilla JavaScript
+- Fetch-based API communication
+- Responsive dashboard panels and grids
 
-This keeps the app lightweight and easy to inspect without additional dependency overhead.
+This architecture keeps the application lightweight, fast, and easy to maintain without unnecessary dependency overhead.
 
-## Dashboard Layout
+## 🖥️ Dashboard Layout
 
-The interface is organized into clear functional panels:
+The interface is organized into functional diagnostic panels:
 
-1. Search and domain input
-2. Quick Commands selector
-3. Quick Lookup Results
-4. Summary metrics
-5. DNS Toolkit navigation
-6. Diagnostic Detail panel
-7. Geo Stats panel
-8. Full Report panel
-9. IP Geo Info panel
+| # | Dashboard Component | Purpose |
+|---|---|---|
+| 01 | 🔍 Search & Domain Input | Enter and validate domains |
+| 02 | ⚡ Quick Commands | Select DNS lookup types |
+| 03 | 📡 Quick Lookup Results | Display DNS query results |
+| 04 | 📊 Summary Metrics | Show key diagnostic information |
+| 05 | 🧰 DNS Toolkit | Access diagnostic tools |
+| 06 | 🔎 Diagnostic Detail | Review detailed findings |
+| 07 | 🌍 Geo Stats | Display geographic network data |
+| 08 | 📄 Full Report | Consolidated domain analysis |
+| 09 | 🛰️ IP Geo Info | Inspect IP-related information |
 
-The user flow is intentionally optimized so that selecting a record type shows the relevant output directly beneath the command selector.
+The workflow is designed so that selecting a record type immediately displays the corresponding results beneath the Quick Commands selector.
 
-## Quick Commands Workflow
+## ⚡ Quick Commands Workflow
 
-Users can enter a domain and choose a record type from the Quick Commands menu. The application then immediately retrieves and displays the matching DNS results.
+DNS Tool includes a compact, MXToolbox-inspired command workflow for fast DNS investigations.
 
-Example record categories:
+Simply enter a domain, select a lookup type, and review the returned information.
 
-- Most common: A, AAAA, MX, TXT
-- DNS records: CNAME, NS, PTR, SOA, SRV, CAA
-- Email & security: SPF, DKIM, DMARC
+**Available lookup categories:**
 
-This provides a straightforward, MXToolbox-like lookup experience for local diagnostics.
+- **Common Records:** `A`, `AAAA`, `MX`, `TXT`
+- **DNS Records:** `CNAME`, `NS`, `PTR`, `SOA`, `SRV`, `CAA`
+- **Email & Security:** `SPF`, `DKIM`, `DMARC`
 
-## Installation
+Results are displayed directly in the dashboard for a streamlined investigation experience.
 
-### Prerequisites
+## 🚀 Installation & Setup
 
-- Node.js 18+
+### Requirements
+
+Make sure the following are installed:
+
+- [Node.js 18+](https://nodejs.org/)
 - npm
-- a modern browser
-- optional internet access for public IP and geo lookups
+- A modern web browser
+- Internet access for external IP and geolocation lookups
 
-### Install and run
+### 1. Clone or Download
+
+Download the project or clone its repository.
+
+### 2. Open the Project Directory
 
 ```bash
 cd "C:\Users\ArtanV\Desktop\DNS Tool"
+```
+
+### 3. Install Dependencies
+
+```bash
 npm install
+```
+
+### 4. Start the Application
+
+```bash
 npm start
 ```
 
-The application runs locally on:
+### 5. Open the Dashboard
 
-```text
-http://localhost:3002
-```
+Once the server starts, access the application at:
 
-If port 3002 is unavailable, the server may use the next available port automatically.
+**http://localhost:3002**
 
-## Quick Start
+> 💡 If port `3002` is unavailable, the server may automatically select the next available port.
 
-1. Open the dashboard in the browser.
-2. Enter a domain such as `example.com`.
-3. Select a DNS record type from Quick Commands.
-4. Review the results in the lookup panel.
-5. Use the toolkit and full report for additional context.
+## 🎯 Quick Start Guide
 
-### Example lookups
+Getting started is simple:
 
-- A record: `example.com`
-- MX record: `gmail.com`
-- TXT record: `github.com`
-- SPF record: `microsoft.com`
+1. Start the Node.js server.
+2. Open the dashboard in your browser.
+3. Enter a domain, for example `example.com`.
+4. Select a DNS record type from Quick Commands.
+5. Review the lookup results.
+6. Explore additional diagnostics using the DNS Toolkit.
+7. Generate a Full Report when needed.
+8. Export the report as a PDF.
 
-## API Endpoints
+### Example Lookups
 
-The app exposes lightweight JSON endpoints for diagnostics.
+| Diagnostic | Example Domain |
+|---|---|
+| A Record | `example.com` |
+| MX Record | `gmail.com` |
+| TXT Record | `github.com` |
+| SPF Record | `microsoft.com` |
+| DMARC Record | `google.com` |
 
-### Summary
+## 🔌 API Endpoints
+
+DNS Tool exposes lightweight JSON endpoints for diagnostic operations.
+
+### 📊 Summary Endpoint
 
 ```http
 GET /api/summary?domain=example.com
 ```
 
-Returns a combined overview of:
+Provides a combined overview of:
 
-- public IP data
-- local IP context
-- geolocation and ISP details
-- basic domain health information
+- Public IP information.
+- Local IP context.
+- Geolocation and ISP details.
+- Basic domain health information.
 
-### Lookup
+### 🔍 DNS Lookup Endpoint
 
 ```http
 GET /api/lookup?domain=example.com&type=A
 ```
 
-Returns DNS records for the specified domain and record type.
+Retrieves DNS records for the specified domain and record type.
 
-### Health
+### ❤️ Health Endpoint
 
 ```http
 GET /api/health?domain=example.com
 ```
 
-Returns domain health checks and reachability data.
+Returns domain health checks and connectivity information.
 
-### Advanced data
+### 🧪 Advanced Diagnostics
 
-The backend also provides advanced analysis for:
+Additional backend functionality includes:
 
-- DNSSEC
-- propagation snapshots
-- TTL insights
-- SPF, DKIM, and DMARC discovery
-- TLS details and certificate status
+- DNSSEC analysis.
+- DNS propagation snapshots.
+- TTL information and insights.
+- SPF, DKIM, and DMARC discovery.
+- TLS certificate details.
+- Certificate validity and hostname checks.
 
-## Validation and Domain Safety
+## 🛡️ Validation & Domain Security
 
-The project includes defensive validation to prevent malformed domain input and unsafe requests.
+The application implements defensive input validation to prevent malformed domains and unsafe requests.
 
-Validation checks cover:
+Validation checks include:
 
-- missing or empty domains
-- protocols and trailing slashes
-- double dots and malformed labels
-- leading or trailing dots
-- illegal characters
-- invalid IP input
-- very long DNS names
-- label length and hyphen rules
+- Empty or missing domain names.
+- Protocol prefixes and trailing slashes.
+- Double dots and malformed labels.
+- Leading or trailing dots.
+- Illegal characters.
+- Invalid IP address input.
+- Excessively long DNS names.
+- Label length restrictions.
+- Invalid hyphen placement.
 
-This helps keep the backend safe and avoids noisy or invalid lookups.
+These safeguards help reduce invalid lookups and improve backend request reliability.
 
-## Rate Limiting and Reliability
+## ⚡ Rate Limiting & Reliability
 
-The app includes basic protections for:
+The backend includes basic reliability and security protections:
 
-- request rate limiting
-- DNS lookup timeouts
-- safer error responses
-- controlled request handling
-- fallback states for unavailable upstream data
+- Request rate limiting.
+- DNS lookup timeouts.
+- Structured error responses.
+- Controlled request processing.
+- Fallback states for unavailable upstream services.
+- Safer handling of invalid requests.
 
-The server returns structured validation and runtime error messages instead of exposing low-level internals.
+The application returns structured validation and runtime errors rather than exposing unnecessary low-level implementation details.
 
-## Testing
+## 🧪 Testing
 
-Run the project tests with:
+Run the project's test suite using:
 
 ```bash
 npm test
 ```
 
-The current validation suite checks a broad set of valid and invalid domain inputs and ensures core validation logic remains stable.
+The validation suite checks valid and invalid domain inputs and verifies that the core validation logic remains stable.
 
-Example current result:
+**Example test output:**
 
 ```text
 Tests passed: 19/19
+
 ✓ All tests passed!
 ```
 
-## PDF Export
+## 📄 PDF Report Export
 
-The project includes a PDF export function for the full report. Users can generate a downloadable PDF in either:
+DNS Tool includes PDF export functionality for the Full Report section.
 
-- white theme
-- black theme
+Users can generate downloadable reports using two visual themes:
 
-This is designed for quick offline documentation and reporting without introducing heavy export infrastructure.
+- ☀️ **White Theme** — Clean, light report layout.
+- 🌙 **Dark Theme** — Dark report layout.
 
-## Recent Improvements
+PDF export provides a convenient way to save diagnostic findings for offline review and documentation.
 
-The project documentation and UI have been refined around practical improvements:
+## 🔄 Recent Improvements
 
-- panel layout cleanup and information hierarchy
-- full-width command panel styling
-- better quick-command workflow
-- faster result visibility after command selection
-- clearer empty-state messaging
-- improved TXT record readability
-- safer validation and backend error handling
-- PDF export for reports
-- professional documentation consolidation
+The project has undergone several practical UI, backend, and documentation improvements:
 
-## Troubleshooting
+- 🎨 Improved dashboard layout and visual hierarchy.
+- 📐 Full-width Quick Commands panel styling.
+- ⚡ Streamlined DNS lookup workflow.
+- 📡 Faster visibility of lookup results.
+- 📝 Improved empty-state messaging.
+- 📄 Better TXT record readability.
+- 🛡️ Safer domain validation.
+- ⚙️ Improved backend error handling.
+- 📊 Consolidated diagnostic reporting.
+- 📥 PDF export with light and dark themes.
+- 📚 Professional documentation structure.
 
-### Server not starting
+## 🔧 Troubleshooting
 
-- confirm Node.js is installed
-- run `npm install`
-- check whether the port is already in use
+### Server Not Starting
 
-### Domain validation errors
+Try the following:
 
-- avoid spaces, protocols, malformed labels, or trailing dots
-- use a valid hostname like `example.com` or `www.example.com`
+1. Verify that Node.js is installed.
+2. Run `npm install`.
+3. Check whether port `3002` is already in use.
+4. Review the terminal output for startup errors.
 
-### No records returned
+### Domain Validation Errors
 
-This may happen when:
+Make sure the entered domain:
 
-- the record type is not published for that domain
-- the domain is misconfigured
-- DNS propagation is incomplete
-- the network cannot resolve the domain
+- Does not contain spaces.
+- Does not include `http://` or `https://`.
+- Does not contain malformed labels.
+- Uses a valid hostname format.
 
-### Browser issues
+Example:
 
-Use the browser console to inspect errors, and confirm the server is running on the expected local port.
+```text
+example.com
+www.example.com
+```
 
-## Documentation Notes
+### No DNS Records Returned
 
-This consolidated document merges the project’s previous markdown references into a single professional guide. It focuses on the most relevant details for setup, usage, architecture, validation, and maintenance.
+Possible causes include:
 
-## Recommended Maintenance
+- The requested record type is not published.
+- The domain has DNS configuration issues.
+- DNS propagation is incomplete.
+- The network cannot resolve the domain.
+- An upstream DNS resolver is unavailable.
 
-- keep the backend minimal and straightforward
-- avoid overbuilding the architecture
-- preserve a local-first design
-- continue improving UX in small, targeted changes
-- validate domain rules and lookup behavior before shipping adjustments
+### Browser or Dashboard Issues
 
-## Summary
+- Open the browser developer console.
+- Check for JavaScript errors.
+- Confirm that the Node.js server is running.
+- Verify that the application is using the correct local port.
 
-DNS Tool is a simple, effective, and maintainable DNS diagnostics dashboard for local domain inspection and quick operational checks. It keeps the project lightweight while covering the common needs of DNS investigation, domain health review, TLS awareness, and report generation.
+## 📚 Documentation
+
+The repository includes additional project documentation:
+
+| File | Description |
+|---|---|
+| `QUICK_START.md` | Quick installation and usage guide |
+| `IMPROVEMENTS_LOG.md` | Development improvement history |
+| `LATEST_CHANGES.md` | Recent project changes |
+| `VERIFICATION_CHECKLIST.md` | Verification and testing checklist |
+| `FULLWIDTH_PANEL_FIX.md` | Dashboard layout improvements |
+| `SESSION_SUMMARY.md` | Development session summary |
+
+This README serves as the consolidated project overview and primary reference for installation, architecture, features, and maintenance.
+
+## 🧭 Recommended Maintenance
+
+To keep DNS Tool reliable and maintainable:
+
+- Keep the backend lightweight and straightforward.
+- Avoid unnecessary architectural complexity.
+- Preserve the local-first application design.
+- Improve the dashboard through targeted UX enhancements.
+- Maintain consistent validation and error handling.
+- Test DNS lookup behavior before releasing changes.
+- Keep documentation synchronized with new features.
+
+## 📌 Project Summary
+
+**DNS Tool** is a lightweight yet capable DNS diagnostics and domain intelligence dashboard designed for practical network investigations.
+
+By combining DNS record inspection, domain health monitoring, TLS diagnostics, network information, and PDF reporting in one interface, it provides a convenient toolkit for everyday domain analysis.
+
+Its minimal Node.js architecture, vanilla frontend, and local-first approach make it easy to run, inspect, and maintain.
+
+---
+
+<p align="center">
+  <strong>🌐 DNS Tool</strong>
+  <br>
+  <sub>DNS Diagnostics • Domain Intelligence • Network Visibility</sub>
+  <br><br>
+  <strong>Developed by Artan V.</strong>
+  <br>
+  <sub>© 2026 Artan V. All Rights Reserved.</sub>
+</p>
